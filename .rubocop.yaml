@@ -1,0 +1,11 @@
+# This is a personal preference to help others who do not use Ruby frequently understand WTF is happening
+Style/RedundantReturn:
+        Enabled: false
+
+# Preference due to larger screens than 720p being usable
+Layout/LineLength:
+        Max: 200
+
+# Preference slightly longer methods, instead of an over abundance of non-reused small ones
+Metrics/MethodLength:
+        Max: 30

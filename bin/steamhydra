@@ -1,0 +1,24 @@
+#!ruby
+require 'thor'
+require 'steamhydra'
+
+class CLI < Thor
+  # Sync output to be more realtime, not command completed
+  $stdout.sync = true
+
+  desc('start <server_name>', "Starts the Steam server lifecycle manager with the specified server. Valid servers are: #{SteamHydra::SUPPORTED_SERVERS.keys}")
+  # option :validate, aliases: :v, type: :boolean,  default: false, desc: 'Validate gamefiles and mods before starting'
+  # option :showcfg, type: :boolean, default: true, desc: 'Print generated configurations during startup'
+  option :debug, type: :boolean, default: false, desc: 'Enables debug level logging.'
+  option :location, type: :string, default: '/server', desc: 'Sets where the server is installed. Defaults to /server, used for container installs.'
+  option :showstatus, type: :boolean, default: true, desc: 'Toggle showing of server status on a frequent interval in logs.'
+  def start(server_name)
+    SteamHydra.set_debug if options[:debug]
+    SteamHydra.check_and_set_server(server_name)
+    # SteamHydra.set_cfg_value(:showcfg, options[:showcfg])
+    # kick off startup workflow and watcher
+    SteamHydra::Supervisor.main_loop(options)
+  end
+end
+
+CLI.start
