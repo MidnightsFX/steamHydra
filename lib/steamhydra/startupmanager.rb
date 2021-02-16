@@ -26,7 +26,7 @@ module SteamHydra
       serverpass = ENV['ServerPass'].nil? ? 'test1234' : ENV['ServerPass']
       command << "-password '#{serverpass}'"
       # Set the worldsave to be on the locally mounted volume
-      command << "-savedir '#{SteamHydra.config[:server_dir]}/saves/#{servermapname}'"
+      command << "-savedir '#{SteamHydra.config[:server_dir]}saves/#{servermapname}'"
       full_command = command.join(' ')
       LOG.debug("Build Valheim startup command: #{full_command}")
       return full_command
