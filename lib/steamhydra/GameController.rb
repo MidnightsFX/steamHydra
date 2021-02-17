@@ -13,7 +13,7 @@ module SteamHydra
     end
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
-      update_status = `#{GameController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 +app_status #{SteamHydra.srv_cfg(:id)}")}`
+      update_status = `#{GameController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 #{SteamHydra.srv_cfg(:id)}")}`
       app_info = false
       status_details = { 'needupdate' => true }
       LOG.debug("Update Output: #{update_status}") if SteamHydra.config[:verbose]
@@ -35,6 +35,17 @@ module SteamHydra
       end
       LOG.debug("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
       return status_details
+    end
+
+    def self.check_players_on_server()
+      players = true
+      case SteamHydra.config[:server]
+      when 'Valheim'
+        # check if there are players on the server
+      else
+        LOG.warn("No player check found for: #{SteamHydra.config[:server]} this will result in the check failing")
+      end
+      return players
     end
 
     # Install/update &/or validate game install

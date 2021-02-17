@@ -4,7 +4,7 @@ module SteamHydra
   # Helps ensure that messages are sent as they are generated not on completion of command
   $stdout.sync = true
 
-  VERSION = '0.1.0'.freeze
+  VERSION = '0.1.1'.freeze
 
   SUPPORTED_SERVERS = {
     Valheim: { id: 896660, install_location: 'valheim_server_Data', name: 'Valhiem'}
@@ -15,6 +15,10 @@ module SteamHydra
 
   def self.set_debug
     SteamHydra::LOG.level = Logger::DEBUG
+  end
+
+  def self.set_verbose
+    SteamHydra.set_cfg_value(:verbose, true)
   end
 
   # For testing purposes, no logging
@@ -45,8 +49,26 @@ module SteamHydra
     return SUPPORTED_SERVERS[SteamHydra.config[:server].to_sym][key.to_sym]
   end
 
-  # Set default configuration values
-  SteamHydra.set_cfg_value(:steamcmd, '/steamcmd/steamcmd.sh')
-  SteamHydra.set_cfg_value(:server_dir, '/server/')
-  SteamHydra.set_cfg_value(:steamuser, 'Anonymous')
+  def self.set_defaults()
+    # Set default configuration values
+    SteamHydra.set_cfg_value(:steamcmd, '/steamcmd/steamcmd.sh')
+    SteamHydra.set_cfg_value(:server_dir, '/server/')
+    SteamHydra.set_cfg_value(:steamuser, 'Anonymous')
+    SteamHydra.set_cfg_value(:verbose, false)
+
+    # Default user configurations
+    case SteamHydra.config[:server]
+    when 'Valheim'
+      port = ENV['Port'].nil? ? 2456 : ENV['Port'].to_i
+      SteamHydra.set_cfg_value(:port, port)
+      servermap = ENV['ServerMap'].nil? ? 'Niflheim' : ENV['ServerMap']
+      SteamHydra.set_cfg_value(:servermap, servermap)
+    else
+      LOG.warn("Defaults not set for this server type. Server type: #{SteamHydra.config[:server]}")
+    end
+    session = ENV['SessionName'].nil? ? 'SteamHydra' : ENV['SessionName']
+    SteamHydra.set_cfg_value(:sessionname, session)
+    serverpass = ENV['ServerPass'].nil? ? 'test1234' : ENV['ServerPass']
+    SteamHydra.set_cfg_value(:serverpass, serverpass)
+  end
 end

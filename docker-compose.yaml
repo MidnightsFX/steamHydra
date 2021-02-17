@@ -2,8 +2,8 @@ version: "3"
 services:
   vahleim:
     build: .
-    command: start Valheim --debug
-    #environment:
+    command: start Valheim --debug --verbose
+    # environment:
       #SessionName: 'session1'
       #ServerMap: 'mapname2'
       #ServerPass: 'password3'

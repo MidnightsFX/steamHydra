@@ -4,7 +4,7 @@ module SteamHydra
     def self.main_loop(options)
       begin
         # Ingest Configuration - no implemented here again
-        provided_configs = { 'key' => 'value' } # placeholder, we don't ingest configs yet
+        # provided_configs = { 'key' => 'value' } # placeholder, we don't ingest configs yet
         # provided_configs = ConfigLoader.discover_configurations('/config')
 
         # Check if there is a game server installation already
@@ -17,7 +17,7 @@ module SteamHydra
         # ConfigGen.set_ark_globals(gameuser_cfg)
 
         # Build startup command
-        StartupManager.set_startup_cmd_by_server_type(provided_configs)
+        StartupManager.set_startup_cmd_by_server_type()
 
         # Handle Validation CLI option
         # FileManipulator.validate_gamefiles(options[:validate])
@@ -38,28 +38,29 @@ module SteamHydra
       Supervisor.first_run(new_server_status) # this will check for server updates
       server_thread = GameController.start_server_thread()
       loop do
-        10.times do
-          sleep 100
+        9.times do
+          sleep 10
           LOG.debug("Checking server thread livliness: #{server_thread.alive?}") if logstatus
           next if server_thread.alive?
 
           server_thread = GameController.start_server_thread()
         end
-        status = Supervisor.update_strategy()
-        Supervisor.check_for_updates(logstatus) if status # update strategy says we should check for an update
+        Supervisor.update_strategy()
       end
     end
 
-
     def self.update_strategy()
-      return case SteamHydra.config[:server]
-             when 'Vahleim' # no way to actively detect players, or send messages to chat, so no update strategy is set.
-               false
-             end
+      LOG.debug("Running update strategy check for #{SteamHydra.config[:server]}")
+      case SteamHydra.config[:server]
+      when 'Valheim'
+        # Check for players and update when empty
+        # Player check for valheim is still not implemented so we are not doing automated updates when the server is empty
+        # Supervisor.check_for_updates(forceupdate: true)
+      end
     end
 
     # Run-once check for an update, if an update is available will update and start back up
-    def self.check_for_updates(_logstatus: true)
+    def self.check_for_updates(_logstatus: true, firstrun: false, forceupdate: false)
       LOG.debug('Starting Checks for updates.')
       update_status = GameController.check_for_server_updates()
       # missing_mods_status = GameController.check_for_missing_mods
@@ -70,12 +71,15 @@ module SteamHydra
       #   return false
       # end
 
-      if update_status['needupdate']
-        # pull check the server if there are people on it
-        # Connect to RCON and tell the server to save and exit
-        # RconExecutor.new()
-        # Stop the server
-        LOG.info("#{SteamHydra.config[:server]} Server needs an update, updating.")
+      if update_status['needupdate'] || forceupdate
+        unless firstrun # We don't check players if this is a first run because the server is not up
+          # loop do
+          #   #server_info = SteamQueries.request_server_a2s_info
+          #   #LOG.debug("requesting server information: #{server_info}") if verbose
+          #   sleep 10
+          # end
+          LOG.info("#{SteamHydra.config[:server]} Server needs an update, updating.")
+        end
         GameController.update_install_game
       end
       # if mod_updates_needed || missing_mods_status
@@ -97,7 +101,7 @@ module SteamHydra
       # Implement server status check
       # GameController.check_mods_and_update(true) if Util.true?(GameController.check_for_missing_mods)
       # Check for game update before starting, this will cause updates if needed
-      Supervisor.check_for_updates()
+      Supervisor.check_for_updates(firstrun: true) # setting first run to skip player checks, and ensure checks for update
       # TODO: setup a backoff for server restart, and integrate discord messaging on failures
       # LOG.info('Starting server.')
       # start_server = GameController.start_server_thread()
