@@ -7,7 +7,7 @@ module SteamHydra
   VERSION = '0.1.1'.freeze
 
   SUPPORTED_SERVERS = {
-    Valheim: { id: 896660, install_location: 'valheim_server_Data', name: 'Valhiem'}
+    Valheim: { id: 896660, install_location: 'valheim_server_Data', name: 'Valheim' }
   }
 
   LOG = Logger.new($stdout)
