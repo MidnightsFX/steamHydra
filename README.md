@@ -31,6 +31,8 @@ services:
       #ServerMap: ''
       #ServerPass: ''
       Port: 2456
+      # EnableMods: 'true'
+      Public: 'false'
     ports:
       - 2456:2456
       - 2456:2456/udp
@@ -42,6 +44,12 @@ services:
       - /mnt/server:/server
 ```
 Note: the actual game server configurations and will be stored on-disk with this configuration `/mnt/server`
+
+### Mods
+
+Mod support is enabled now. Passing 'EnableMods' will cause the server management scripts to download [BepInEx v5.4.8](https://github.com/BepInEx/BepInEx/tree/v5.4.8). It will then switch to using the modloader [launching script](./lib/config_templates/valheim_modded_start.sh) to launch the game.
+
+Mod installs are not automated, but with the modloader in place feel free to add mods!
 
 ## Contributing
 

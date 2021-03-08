@@ -23,6 +23,19 @@ module SteamHydra
       end
     end
 
+    def self.install_modtools()
+      case SteamHydra.config[:server]
+      when 'Valheim'
+        return if File.exist?("#{SteamHydra.config[:server_dir]}modloader.zip")
+
+        LOG.debug('Starting download of BapInEx')
+        `curl -sqL "https://github.com/BepInEx/BepInEx/releases/download/v5.4.8/BepInEx_unix_5.4.8.0.zip" -o modloader.zip`
+        `unzip modloader.zip`
+      else
+        LOG.warn("No modloader definition found for gameserver type: #{SteamHydra.config[:server]}")
+      end
+    end
+
     # Valdiate gamefiles and modfiles
     def self.validate_gamefiles(validate_status)
       return false unless validate_status
@@ -41,12 +54,7 @@ module SteamHydra
         return false
       end
       # Ensure directory permissions are OK to install as steam
-      # LOG.info('Making install directories, and setting permissions.')
-      # FileManipulator.ensure_file('/server/ARK')
-      # FileManipulator.ensure_file('/server/ARK-Backups')
-      # FileManipulator.ensure_file('/home/steam/Steam/steamapps/workshop')
-      # Create an ark instance | only one instance per container
-      LOG.info("Starting install of #{SteamHydra.config[:server]}.")
+      LOG.info("Starting install/Update for #{SteamHydra.config[:server]}.")
       GameController.update_install_game(validate)
       LOG.info("#{SteamHydra.config[:server]} install completed.")
       return true

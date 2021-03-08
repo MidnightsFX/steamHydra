@@ -55,6 +55,8 @@ module SteamHydra
     SteamHydra.set_cfg_value(:server_dir, '/server/')
     SteamHydra.set_cfg_value(:steamuser, 'Anonymous')
     SteamHydra.set_cfg_value(:verbose, false)
+    SteamHydra.set_cfg_value(:modded, false)
+    SteamHydra.set_cfg_value(:gem_dir, __dir__[0..-12])
 
     # Default user configurations
     case SteamHydra.config[:server]
@@ -63,6 +65,18 @@ module SteamHydra
       SteamHydra.set_cfg_value(:port, port)
       servermap = ENV['ServerMap'].nil? ? 'Niflheim' : ENV['ServerMap']
       SteamHydra.set_cfg_value(:servermap, servermap)
+      if ENV['EnableMods']
+        if ENV['EnableMods'].casecmp('true').zero?
+          LOG.debug('Mods Enabled.')
+          SteamHydra.set_cfg_value(:modded, true)
+          # Set modlist here
+        end
+      end
+      SteamHydra.set_cfg_value(:public, 1)
+      if ENV['Public']
+        listgame = ENV['Public'].to_i.zero? || ENV['Public'].downcase == 'false' ? 0 : 1
+        SteamHydra.set_cfg_value(:public, listgame)
+      end
     else
       LOG.warn("Defaults not set for this server type. Server type: #{SteamHydra.config[:server]}")
     end

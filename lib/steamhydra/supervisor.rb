@@ -9,12 +9,17 @@ module SteamHydra
 
         # Check if there is a game server installation already
         new_server_status = FileManipulator.install_server()
-
+        if SteamHydra.config[:modded]
+          LOG.info('Ensuring Modtools updated.')
+          FileManipulator.install_modtools()
+        end
         # Generate Game configurations
 
         # gameuser_cfg = ConfigGen.gen_game_user_conf(CFG_PATH, provided_configs)
         # ConfigGen.gen_game_conf(CFG_PATH, provided_configs) # Also gen game.conf
         # ConfigGen.set_ark_globals(gameuser_cfg)
+
+        # sleep 500
 
         # Build startup command
         StartupManager.set_startup_cmd_by_server_type()
@@ -53,6 +58,7 @@ module SteamHydra
       LOG.debug("Running update strategy check for #{SteamHydra.config[:server]}")
       case SteamHydra.config[:server]
       when 'Valheim'
+        LOG.info('No Update Strategy Set for Valheim, please restart the container to force an update check.')
         # Check for players and update when empty
         # Player check for valheim is still not implemented so we are not doing automated updates when the server is empty
         # Supervisor.check_for_updates(forceupdate: true)

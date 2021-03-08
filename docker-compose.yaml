@@ -3,11 +3,13 @@ services:
   vahleim:
     build: .
     command: start Valheim --debug --verbose
-    # environment:
+    environment:
       #SessionName: 'session1'
       #ServerMap: 'mapname2'
       #ServerPass: 'password3'
       #Port: 2456
+      EnableMods: 'true'
+      # Public: 'false'
     ports:
       - 2456:2456
       - 2456:2456/udp
