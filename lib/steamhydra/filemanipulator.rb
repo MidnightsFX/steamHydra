@@ -29,7 +29,9 @@ module SteamHydra
         return if File.exist?("#{SteamHydra.config[:server_dir]}modloader.zip")
 
         LOG.debug('Starting download of BapInEx')
-        `curl -sqL "https://github.com/BepInEx/BepInEx/releases/download/v5.4.8/BepInEx_unix_5.4.8.0.zip" -o modloader.zip`
+        modloader_download = "https://github.com/BepInEx/BepInEx/releases/download/v#{SteamHydra.config[:modded_metadata][:bepinex]}/BepInEx_unix_#{SteamHydra.config[:modded_metadata][:bepinex]}.0.zip"
+        LOG.debug("Looking for BepInEx: #{modloader_download}")
+        `curl -sqL "#{modloader_download}" -o modloader.zip`
         `unzip modloader.zip`
       else
         LOG.warn("No modloader definition found for gameserver type: #{SteamHydra.config[:server]}")

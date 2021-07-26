@@ -69,6 +69,7 @@ module SteamHydra
         if ENV['EnableMods'].casecmp('true').zero?
           LOG.debug('Mods Enabled.')
           SteamHydra.set_cfg_value(:modded, true)
+          SteamHydra.set_cfg_value(:modded_metadata, { bepinex: '5.4.11' })
           # Set modlist here
         end
       end
