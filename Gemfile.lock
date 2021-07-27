@@ -2,12 +2,15 @@ PATH
   remote: .
   specs:
     steamhydra (0.1.1)
+      steam-condenser (~> 1.3.11)
       thor (= 1.1.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.4.4)
+    multi_json (1.15.0)
+    multi_xml (0.6.0)
     rake (12.3.3)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)
@@ -22,6 +25,9 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.10.0)
     rspec-support (3.10.2)
+    steam-condenser (1.3.11)
+      multi_json (~> 1.6)
+      multi_xml (~> 0.5)
     thor (1.1.0)
 
 PLATFORMS

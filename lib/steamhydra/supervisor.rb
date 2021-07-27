@@ -2,7 +2,7 @@ module SteamHydra
   # Supervise the running of the game server
   module Supervisor
     def self.main_loop(options)
-      begin
+     # begin
         # Ingest Configuration - no implemented here again
         # provided_configs = { 'key' => 'value' } # placeholder, we don't ingest configs yet
         # provided_configs = ConfigLoader.discover_configurations('/config')
@@ -30,21 +30,22 @@ module SteamHydra
         # start service
         # check if update is available
         #  - wait until server is idle to update
-        Supervisor.run_server(new_server_status, logstatus: options[:showstatus])
-      rescue StandardError => e
-       LOG.error("Encounted Runtime Error: #{e.message}")
-       LOG.error("Trace: #{e.backtrace.inspect.join("\n")}")
-      end
+        Supervisor.run_server(new_server_status, logstatus: options[:showstatus], sleep_duration: options[:status_interval])
+     # rescue StandardError => e
+     #   LOG.error("Encounted Runtime Error: #{e.message}")
+     #   trace = e.backtrace.join("\n")
+     #   LOG.error("Trace: #{trace}")
+     # end
     end
 
     # Loops running the server process
-    def self.run_server(new_server_status, logstatus: true)
+    def self.run_server(new_server_status, logstatus: true, sleep_duration: 10)
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
       server_thread = GameController.start_server_thread()
       loop do
         9.times do
-          sleep 10
+          sleep sleep_duration
           LOG.debug("Checking server thread livliness: #{server_thread.alive?}") if logstatus
           next if server_thread.alive?
 
@@ -58,10 +59,22 @@ module SteamHydra
       LOG.debug("Running update strategy check for #{SteamHydra.config[:server]}")
       case SteamHydra.config[:server]
       when 'Valheim'
-        LOG.info('No Update Strategy Set for Valheim, please restart the container to force an update check.')
         # Check for players and update when empty
-        # Player check for valheim is still not implemented so we are not doing automated updates when the server is empty
-        # Supervisor.check_for_updates(forceupdate: true)
+        update_status = GameController.check_for_server_updates()
+        return true if update_status['needupdate'] == false
+
+        LOG.info('Update found, waiting for the server to empty.')
+        loop do
+          break if SteamQueries.check_for_active_players() == false
+
+          sleep 120
+        end
+        LOG.info('Server detected as empty, stopping the server and performing the update.')
+        Thread.kill(SteamHydra.config[:server_thread])
+        GameController.update_install_game(true)
+        GameController.start_server_thread()
+      else
+        LOG.warn("No Update strategy was found for: #{SteamHydra.config[:server]}. The supervisor will not automatically update this game.")
       end
     end
 

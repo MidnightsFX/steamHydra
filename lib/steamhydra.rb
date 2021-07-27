@@ -3,7 +3,7 @@ require 'steamhydra/filemanipulator'
 require 'steamhydra/GameController'
 require 'steamhydra/supervisor'
 require 'steamhydra/startupmanager'
-require 'steamhydra/steamqueries'
+require 'steamhydra/server_status_manager/steamqueries'
 
 module SteamHydra
   # Handle being told to kill the container
@@ -18,7 +18,7 @@ module SteamHydra
 
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
-    SteamHydra.config(:server_thread).kill
+    Thread.kill(SteamHydra.config(:server_thread))
     puts 'Server exited.'
     exit
   end

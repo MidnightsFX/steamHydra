@@ -44,7 +44,7 @@ module SteamHydra
       command << "SAVEDIR='#{SteamHydra.config[:server_dir]}saves/#{SteamHydra.config[:servermap]}'"
       command << ".#{file}"
       full_command = command.join(' ')
-      LOG.debug("Build Valheim startup command: #{full_command}")
+      LOG.debug("Built Valheim startup command: #{full_command}")
       return full_command
     end
 

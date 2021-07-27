@@ -42,6 +42,7 @@ module SteamHydra
       case SteamHydra.config[:server]
       when 'Valheim'
         # check if there are players on the server
+        
       else
         LOG.warn("No player check found for: #{SteamHydra.config[:server]} this will result in the check failing")
       end
