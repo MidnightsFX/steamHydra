@@ -42,14 +42,16 @@ module SteamHydra
     def self.run_server(new_server_status, logstatus: true, sleep_duration: 10)
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
-      server_thread = GameController.start_server_thread()
+      server_pid = GameController.start_server_thread()
       loop do
         9.times do
           sleep sleep_duration
-          LOG.debug("Checking server thread livliness: #{server_thread.alive?}") if logstatus
-          next if server_thread.alive?
+          pid_status = `ps ho state -p #{server_pid}`
+          pid_running = pid_status.empty? ? false : true
+          LOG.debug("Checking if server is running: #{pid_running}") if logstatus
+          next if pid_running
 
-          server_thread = GameController.start_server_thread()
+          server_pid = GameController.start_server_thread()
         end
         Supervisor.update_strategy()
       end
@@ -70,7 +72,7 @@ module SteamHydra
           sleep 120
         end
         LOG.info('Server detected as empty, stopping the server and performing the update.')
-        Thread.kill(SteamHydra.config[:server_thread])
+        GameController.stop_server_thread()
         GameController.update_install_game(true)
         GameController.start_server_thread()
       else
