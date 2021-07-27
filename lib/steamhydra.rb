@@ -1,6 +1,6 @@
 require 'steamhydra/configuration'
 require 'steamhydra/filemanipulator'
-require 'steamhydra/gamecontroller'
+require 'steamhydra/GameController'
 require 'steamhydra/supervisor'
 require 'steamhydra/startupmanager'
 require 'steamhydra/server_status_manager/steamqueries'
@@ -18,7 +18,7 @@ module SteamHydra
 
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
-    GameController.stop_server_thread
+    Thread.kill(SteamHydra.config(:server_thread))
     puts 'Server exited.'
     exit
   end

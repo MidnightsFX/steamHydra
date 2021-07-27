@@ -2,30 +2,15 @@ module SteamHydra
   # Controls gameserver application, delegates for hyper specific requirements
   module GameController
     def self.start_server_thread()
-      thr = Thread.new {
-        start_cmd = "#{start_segments[0..-2].join(' ')} sh -c 'echo $$; exec #{SteamHydra.config[:start_server_cmd]}'"
-        LOG.debug("Attempting to start server with the following command: \n #{start_cmd}")
-        pid = `#{start_cmd}`
-        LOG.info("Got pid! #{pid}")
-      }
-      LOG.debug('Checking for servers running PID.')
-      5.times do
-        sleep 10
-        pid = `ps h`
-        LOG.debug("Pid found: #{pid}")
+      thr = Thread.new do
+        LOG.debug('Starting Server Thread')
+        system(SteamHydra.config[:start_server_cmd])
+        LOG.debug('Server Thread exited')
       end
-      exit
-      LOG.info("Server Started with pid: #{pid}.")
-      SteamHydra.set_cfg_value(:server_pid, pid)
+      LOG.info("Server Thread #{thr} created.")
       SteamHydra.set_cfg_value(:server_thread, thr)
-      return pid
+      return thr
     end
-
-    # Sends the expected interrupt to the server thread, causing shutdown
-    def self.stop_server_thread()
-      `kill -SIGINT #{SteamHydra.config(:server_pid)}`
-    end
-
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
       update_status = `#{GameController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 #{SteamHydra.srv_cfg(:id)}")}`
