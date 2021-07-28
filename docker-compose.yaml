@@ -4,11 +4,12 @@ services:
     build: .
     command: start Valheim --debug --verbose
     environment:
-      #SessionName: 'session1'
-      #ServerMap: 'mapname2'
-      #ServerPass: 'password3'
-      #Port: 2456
+      SessionName: 'session1'
+      ServerMap: 'mapname2'
+      ServerPass: 'password3'
+      # Port: 2456
       EnableMods: 'true'
+      # Modloader: '5.4.11' # newer versions are incompatible with Valheim
       # Public: 'false'
     ports:
       - 2456:2456

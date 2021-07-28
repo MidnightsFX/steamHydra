@@ -57,6 +57,7 @@ module SteamHydra
     SteamHydra.set_cfg_value(:verbose, false)
     SteamHydra.set_cfg_value(:modded, false)
     SteamHydra.set_cfg_value(:gem_dir, __dir__[0..-12])
+    SteamHydra.set_cfg_value(:server_failures, 0)
 
     # Default user configurations
     case SteamHydra.config[:server]
@@ -70,6 +71,7 @@ module SteamHydra
           LOG.debug('Mods Enabled.')
           SteamHydra.set_cfg_value(:modded, true)
           SteamHydra.set_cfg_value(:modded_metadata, { bepinex: '5.4.11' })
+          SteamHydra.config[:modded_metadata][:bepinex] = ENV['Modloader'].strip unless ENV['Modloader'].nil?
           # Set modlist here
         end
       end

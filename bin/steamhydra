@@ -15,10 +15,11 @@ class CLI < Thor
   option :showstatus, type: :boolean, default: true, desc: 'Toggle showing of server status on a frequent interval in logs.'
   option :status_interval, type: :numeric, default: 10, desc: 'Number of seconds to sleep between server liveliness, decrease to check for updates more frequently.'
   def start(server_name)
-    SteamHydra.set_debug if options[:debug]
-    SteamHydra.set_verbose if options[:verbose]
     SteamHydra.check_and_set_server(server_name)
     SteamHydra.set_defaults() # Always set defaults after declaring server type so we can set that servers defaults
+    # Set customized settings after defaults.
+    SteamHydra.set_debug if options[:debug]
+    SteamHydra.set_verbose if options[:verbose]
     # SteamHydra.set_cfg_value(:showcfg, options[:showcfg])
     # kick off startup workflow and watcher
     SteamHydra::Supervisor.main_loop(options)

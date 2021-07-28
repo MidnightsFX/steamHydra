@@ -10,7 +10,7 @@ module SteamHydra
         # Check if there is a game server installation already
         new_server_status = FileManipulator.install_server()
         if SteamHydra.config[:modded]
-          LOG.info('Ensuring Modtools updated.')
+          LOG.info('Mods enabled!')
           FileManipulator.install_modtools()
         end
         # Generate Game configurations
@@ -42,14 +42,19 @@ module SteamHydra
     def self.run_server(new_server_status, logstatus: true, sleep_duration: 10)
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
-      server_thread = GameController.start_server_thread()
+      GameController.start_server_thread()
       loop do
         9.times do
           sleep sleep_duration
-          LOG.debug("Checking server thread livliness: #{server_thread.alive?}") if logstatus
-          next if server_thread.alive?
+          status = 'Checking server thread '
+          status += SteamHydra.config[:server_thread].to_s if SteamHydra.config[:verbose] == true
+          LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?}") if logstatus
+          next if SteamHydra.config[:server_thread].alive?
 
-          server_thread = GameController.start_server_thread()
+          SteamHydra.config[:server_failures] += 1
+          raise('Repeated server failures detected, killing the monitor process. Ensure your server configs are allowing the server to startup correctly.') if SteamHydra.config[:server_failures] == 10
+
+          GameController.start_server_thread()
         end
         Supervisor.update_strategy()
       end
@@ -70,7 +75,7 @@ module SteamHydra
           sleep 120
         end
         LOG.info('Server detected as empty, stopping the server and performing the update.')
-        Thread.kill(SteamHydra.config[:server_thread])
+        GameController.stop_server_thread()
         GameController.update_install_game(true)
         GameController.start_server_thread()
       else

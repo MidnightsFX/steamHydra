@@ -32,9 +32,9 @@ module SteamHydra
 
     def self.build_startup_for_valheim()
       file = if SteamHydra.config[:modded]
-               '/valheim_start.sh'
-             else
                '/valheim_modded_start.sh'
+             else
+               '/valheim_start.sh'
              end
       command = []
       command << "SERVERNAME='#{SteamHydra.config[:sessionname]}'"
