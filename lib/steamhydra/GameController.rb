@@ -65,13 +65,22 @@ module SteamHydra
       req = Net::HTTP::Get.new(url.to_s)
       app_info = Net::HTTP.start(url.host, url.port, use_ssl: true) {|http| http.request(req) }
       LOG.debug("steamcmd api response: #{app_info.code}")
-      app_details = JSON.parse(app_info.body)
-      # current released build
-      current_build = app_details['data']["#{SteamHydra.srv_cfg(:id)}"]['depots']['branches']['public']
-      LOG.debug("Retrieved Current Build info: #{current_build}")
-      if update_server_stored_data
-        SteamHydra.set_cfg_value(:build_id, current_build['buildid'])
-        SteamHydra.set_cfg_value(:build_datetime, current_build['timeupdated'])
+      current_build = {}
+      if app_info.code == 200
+        app_details = JSON.parse(app_info.body)
+        # current released build
+        current_build = app_details['data']["#{SteamHydra.srv_cfg(:id)}"]['depots']['branches']['public']
+        LOG.debug("Retrieved Current Build info: #{current_build}")
+        if update_server_stored_data
+          SteamHydra.set_cfg_value(:build_id, current_build['buildid'])
+          SteamHydra.set_cfg_value(:build_datetime, current_build['timeupdated'])
+        end
+      else
+        LOG.warn("Bad response from steam API server, using existing build data for update checking. No Update will occur.")
+        current_build = {
+          'buildid' => SteamHydra.config[:build_id],
+          'timeupdated' => SteamHydra.config[:build_datetime]
+        }
       end
       return current_build
     end

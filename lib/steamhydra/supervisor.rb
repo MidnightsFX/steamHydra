@@ -45,7 +45,7 @@ module SteamHydra
       Supervisor.first_run(new_server_status) # this will check for server updates
       GameController.start_server_thread()
       loop do
-        10.times do
+        60.times do
           sleep sleep_duration
           status = 'Checking server thread '
           status += SteamHydra.config[:server_thread].to_s if SteamHydra.config[:verbose] == true
