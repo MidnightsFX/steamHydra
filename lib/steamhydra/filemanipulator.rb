@@ -31,7 +31,7 @@ module SteamHydra
 
         LOG.debug("Starting download of BapInEx #{SteamHydra.config[:modded_metadata][:bepinex]}")
         # https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/5.4.1100/ # Switching to use thunderstore due to current BepInEx not working correctly with Valheim
-        modloader_download = "https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/#{SteamHydra.config[:modded_metadata][:bepinex]}00"
+        modloader_download = "https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/#{SteamHydra.config[:modded_metadata][:bepinex]}"
         LOG.debug("Looking for BepInEx: #{modloader_download}")
         `curl -sqL "#{modloader_download}" -o modloader-#{SteamHydra.config[:modded_metadata][:bepinex]}.zip`
         `unzip -o modloader-#{SteamHydra.config[:modded_metadata][:bepinex]}.zip`

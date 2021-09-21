@@ -70,7 +70,7 @@ module SteamHydra
         if ENV['EnableMods'].casecmp('true').zero?
           LOG.debug('Mods Enabled.')
           SteamHydra.set_cfg_value(:modded, true)
-          SteamHydra.set_cfg_value(:modded_metadata, { bepinex: '5.4.11' })
+          SteamHydra.set_cfg_value(:modded_metadata, { bepinex: '5.4.1502' })
           SteamHydra.config[:modded_metadata][:bepinex] = ENV['Modloader'].strip unless ENV['Modloader'].nil?
           # Set modlist here
         end

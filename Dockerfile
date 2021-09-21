@@ -1,7 +1,7 @@
 FROM ruby:2.7.2-buster
 
 RUN apt-get update \
-    && apt-get -y install curl libc6-i386 lib32gcc1
+    && apt-get -y install curl libc6-i386 lib32gcc1 libc6-dev
 
 WORKDIR /steamcmd
 RUN curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
