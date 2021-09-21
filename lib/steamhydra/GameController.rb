@@ -38,41 +38,43 @@ module SteamHydra
     end
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
-      LOG.info("Checking steam if #{SteamHydra.srv_cfg(:name)} app #{SteamHydra.srv_cfg(:id)} needs an update.")
-      update_status = `#{GameController.build_steamcmd_request("+force_install_dir /server +app_info_update 1 +app_status #{SteamHydra.srv_cfg(:id)}")}`
-      app_info = false
-      status_details = { 'needupdate' => true }
-      LOG.debug("Update Output: #{update_status}") if SteamHydra.config[:verbose]
-      update_status.split("\n").each do |line|
-        if line.include?("#{SteamHydra.srv_cfg(:id)} already up to date.")
-          status_details['needupdate'] = false
-          break
-        end
-        # Not sure these are really the correct statuses to be checking for.
-        status_details['needupdate'] = false if line.include?("'#{SteamHydra.srv_cfg(:id)}' already up to date.") || line.include?(' update state:  ( No Error )')
-        next unless app_info == true || line.empty? || line.include?(' - ')
-
-        if line[0..2] == '   ' && status_details['mounted depots']
-          status_details['mounted depots'] += line
-          next
-        end
-        details = line.gsub(' - ', '').split(':')
-        status_details[details[0].to_s] = details[1]
+      current_build_info = GameController.get_game_metadata(false)
+      status_details = { 'needupdate' => false }
+      if current_build_info['buildid'] != SteamHydra.config[:build_id] || current_build_info['timeupdated'] != SteamHydra.config[:build_datetime]
+        status_details['needupdate'] = true
+        # Since we are performing an update we need to set the current build as what we are now running, so we don't update constantly.
+        SteamHydra.set_cfg_value(:build_id, current_build_info['buildid'])
+        SteamHydra.set_cfg_value(:build_datetime, current_build_info['timeupdated'])
       end
       LOG.info("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
+      # This is a 'temp fix' for the newer broken details with recent steamcmd
+      # Kill steam error reports -_- which otherwise are zombies...
+      # other_processes = `ps h -eo pid,ppid,args`
+      # other_processes.split("\n").each do |entry|
+      #   next unless entry.include?('steamerrorrepor') # just looking for steamerrorrepor processes
+      # 
+      #   elements = entry.split(' ')
+      #   LOG.debug("Running: kill -SIGINT #{elements[0]}")
+      #   `kill -SIGINT #{elements[0]}`
+      # end
       return status_details
     end
 
-    # def self.check_players_on_server()
-    #   players = true
-    #   case SteamHydra.config[:server]
-    #   when 'Valheim'
-    #     # check if there are players on the server
-    #   else
-    #     LOG.warn("No player check found for: #{SteamHydra.config[:server]} this will result in the check failing")
-    #   end
-    #   return players
-    # end
+    def self.get_game_metadata(update_server_stored_data = true)
+      url = URI.parse("https://api.steamcmd.net/v1/info/#{SteamHydra.srv_cfg(:id)}")
+      req = Net::HTTP::Get.new(url.to_s)
+      app_info = Net::HTTP.start(url.host, url.port, use_ssl: true) {|http| http.request(req) }
+      LOG.debug("steamcmd api response: #{app_info.code}")
+      app_details = JSON.parse(app_info.body)
+      # current released build
+      current_build = app_details['data']["#{SteamHydra.srv_cfg(:id)}"]['depots']['branches']['public']
+      LOG.debug("Retrieved Current Build info: #{current_build}")
+      if update_server_stored_data
+        SteamHydra.set_cfg_value(:build_id, current_build['buildid'])
+        SteamHydra.set_cfg_value(:build_datetime, current_build['timeupdated'])
+      end
+      return current_build
+    end
 
     # Install/update &/or validate game install
     # TODO: Check success and fail if game is not installed/updated correctly

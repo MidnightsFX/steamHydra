@@ -26,6 +26,7 @@ module SteamHydra
 
         # Handle Validation CLI option
         # FileManipulator.validate_gamefiles(options[:validate])
+        # GameController.get_game_metadata()
 
         # start service
         # check if update is available
@@ -39,12 +40,12 @@ module SteamHydra
     end
 
     # Loops running the server process
-    def self.run_server(new_server_status, logstatus: true, sleep_duration: 10)
+    def self.run_server(new_server_status, logstatus: true, sleep_duration: 30)
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
       GameController.start_server_thread()
       loop do
-        9.times do
+        10.times do
           sleep sleep_duration
           status = 'Checking server thread '
           status += SteamHydra.config[:server_thread].to_s if SteamHydra.config[:verbose] == true

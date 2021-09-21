@@ -5,6 +5,10 @@ require 'steamhydra/supervisor'
 require 'steamhydra/startupmanager'
 require 'steamhydra/server_status_manager/steamqueries'
 
+require 'date'
+require 'net/http'
+require 'json'
+
 module SteamHydra
   # Handle being told to kill the container
   Signal.trap(0, proc { puts "Terminating: #{$$}" })
