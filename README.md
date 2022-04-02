@@ -24,7 +24,7 @@ Here is an example docker-compose.yaml which could be used.
 version: "3"
 services:
   vahleim:
-    image: midnightsfx/steamhydra-valheim:0.3.2
+    image: midnightsfx/steamhydra-valheim:0.7.9
     command: start Valheim --debug
     environment:
       #SessionName: ''
