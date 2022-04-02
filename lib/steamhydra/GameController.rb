@@ -61,12 +61,13 @@ module SteamHydra
     end
 
     def self.get_game_metadata(update_server_stored_data = true)
+      current_build = {}
+      begin
       url = URI.parse("https://api.steamcmd.net/v1/info/#{SteamHydra.srv_cfg(:id)}")
       req = Net::HTTP::Get.new(url.to_s)
       app_info = Net::HTTP.start(url.host, url.port, use_ssl: true) {|http| http.request(req) }
       LOG.debug("steamcmd api response: #{app_info.code}")
-      current_build = {}
-      if app_info.code == 200
+      raise('bad response from server') if app_info.code == 200
         app_details = JSON.parse(app_info.body)
         # current released build
         current_build = app_details['data']["#{SteamHydra.srv_cfg(:id)}"]['depots']['branches']['public']
@@ -75,7 +76,7 @@ module SteamHydra
           SteamHydra.set_cfg_value(:build_id, current_build['buildid'])
           SteamHydra.set_cfg_value(:build_datetime, current_build['timeupdated'])
         end
-      else
+      rescue
         LOG.warn("Bad response from steam API server, using existing build data for update checking. No Update will occur.")
         current_build = {
           'buildid' => SteamHydra.config[:build_id],
