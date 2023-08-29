@@ -1,4 +1,4 @@
-FROM ruby:2.7.2-buster
+FROM ruby:3.1.3-buster
 
 RUN apt-get update \
     && apt-get -y install curl libc6-i386 lib32gcc1 libc6-dev

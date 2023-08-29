@@ -9,7 +9,18 @@ services:
       ServerPass: 'password3'
       # Port: 2456
       EnableMods: 'true'
-      Modloader: '5.4.1903'
+      # Modloader: 'latest'
+      Mods:
+        - ValheimArmory
+        - EpicLoot
+        - UseEquipmentInWater
+        - Foraging
+        - Lumberjacking
+        - Mineshafts
+        - Ranching
+        - SolidHitboxes
+        - CreatureLevelAndLootControl
+        - Endurance
       # Public: 'false'
     ports:
       - 2456:2456

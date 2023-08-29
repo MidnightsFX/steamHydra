@@ -1,9 +1,15 @@
 module SteamHydra
   module FileManipulator
+
+    # returns the file location of the parent steamhydra folder, allowing gem local file navigation with absolute path
+    def self.gem_resource_location()
+      return __dir__[0..-11]
+    end
+
     # walks the filepath and if there is no file/folder there it will generate them, does nothing if they exist
     def self.ensure_file(location, filename = nil, enfore_permissions = true)
       LOG.debug("Ensuring File/Folder: #{location}/#{filename}")
-      ug_info = File.stat('/steamcmd') # Not sure the owner/group is going to always be correct forr this
+      ug_info = File.stat('/steamcmd') if enfore_permissions # Not sure the owner/group is going to always be correct for this
       folder_location = '/'
       location.split('/').each do |segment|
         next if segment == '' # skip start or end slashes
@@ -23,18 +29,21 @@ module SteamHydra
       end
     end
 
+    # Installs the required modding tools based on server type
     def self.install_modtools()
       LOG.info('Ensuring Modtools Installed.')
       case SteamHydra.config[:server]
       when 'Valheim'
-        return if File.exist?("#{SteamHydra.config[:server_dir]}modloader-#{SteamHydra.config[:modded_metadata][:bepinex]}.zip")
+        bepInExPack_metadata = ModLibrary.thunderstore_check_for_named_mod("BepInExPack_Valheim", SteamHydra.config[:modded_metadata][:bepinex])
+        return if File.exist?("#{SteamHydra.config[:server_dir]}modloader-#{bepInExPack_metadata[:target_version]}.zip")
+
+
+        bepInExPack_metadata[:version_download_url]
 
         LOG.debug("Starting download of BapInEx #{SteamHydra.config[:modded_metadata][:bepinex]}")
-        # https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/5.4.1100/ # Switching to use thunderstore due to current BepInEx not working correctly with Valheim
-        modloader_download = "https://thunderstore.io/package/download/bbepis/BepInExPack/#{SteamHydra.config[:modded_metadata][:bepinex]}"
-        LOG.debug("Looking for BepInEx: #{modloader_download}")
-        `curl -sqL "#{modloader_download}" -o modloader-#{SteamHydra.config[:modded_metadata][:bepinex]}.zip`
-        `unzip -o modloader-#{SteamHydra.config[:modded_metadata][:bepinex]}.zip`
+        LOG.debug("Looking for BepInEx: #{bepInExPack_metadata[:version_download_url]}")
+        `curl -sqL "#{bepInExPack_metadata[:version_download_url]}" -o modloader-#{bepInExPack_metadata[:target_version]}.zip`
+        `unzip -o modloader-#{bepInExPack_metadata[:target_version]}.zip`
         LOG.debug('Copying BepInEx files to correct locations.')
         `cp -r /server/BepInExPack_Valheim/. /server/` # this depends on the current packaging format of denikson/BepInExPack_Valheim
       else

@@ -57,6 +57,7 @@ module SteamHydra
 
           GameController.start_server_thread()
         end
+        Supervisor.runtime_maintenance()
         Supervisor.update_strategy()
       end
     end
@@ -81,6 +82,15 @@ module SteamHydra
         GameController.start_server_thread()
       else
         LOG.warn("No Update strategy was found for: #{SteamHydra.config[:server]}. The supervisor will not automatically update this game.")
+      end
+    end
+
+    def self.runtime_maintenance()
+      case SteamHydra.config[:server]
+      when 'Valheim'
+        SteamHydra.rotate_bepinex_log("/BepInEx/LogOutput.log") if SteamHydra.config[:modded] == true
+      else
+        LOG.debug("No maintenance strategy defined for #{SteamHydra.config[:server]}. Logs and other system resouces might overflow.")
       end
     end
 

@@ -1,12 +1,16 @@
 require 'steamhydra/configuration'
+require 'steamhydra/utilities/request'
+require 'steamhydra/utilities/logrotate'
 require 'steamhydra/filemanipulator'
 require 'steamhydra/GameController'
 require 'steamhydra/supervisor'
 require 'steamhydra/startupmanager'
 require 'steamhydra/server_status_manager/steamqueries'
+require 'steamhydra/mod_managers/thunderstoreapi'
+require 'steamhydra/mod_managers/modlibrary'
+require 'steamhydra/mod_managers/modmanager'
 
 require 'date'
-require 'net/http'
 require 'json'
 
 module SteamHydra
@@ -22,7 +26,7 @@ module SteamHydra
 
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
-    Thread.kill(SteamHydra.config(:server_thread))
+    `kill -SIGINT #{SteamHydra.config[:server_pid]}`
     puts 'Server exited.'
     exit
   end

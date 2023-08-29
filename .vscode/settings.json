@@ -1,3 +1,4 @@
 {
-  "ruby.rubocop.configFilePath": "/mnt/c/Users/carls/Documents/projects/steamhydra/.rubocop.yaml"
+  "ruby.rubocop.configFilePath": "/mnt/c/Users/carls/Documents/projects/steamhydra/.rubocop.yaml",
+  "solargraph.commandPath": "/home/cstutz/.rvm/gems/ruby-3.1.3@steamhydra/bin/solargraph"
 }

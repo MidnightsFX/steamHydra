@@ -2,36 +2,32 @@ module SteamHydra
   # Controls gameserver application, delegates for hyper specific requirements
   module GameController
     def self.start_server_thread()
-      thr = Thread.new do
-        LOG.debug("Starting Server Thread with: #{SteamHydra.config[:start_server_cmd]}")
-        system(SteamHydra.config[:start_server_cmd])
-        LOG.debug('Server Thread exited')
+      LOG.debug("Starting Server with: #{SteamHydra.config[:start_server_cmd]}")
+      system("#{SteamHydra.config[:start_server_cmd]} &")
+      running_processes = `ps h -eo pid,ppid,args`
+      pid = nil
+      LOG.debug("Checking processes: \n #{running_processes}") if SteamHydra.config[:verbose]
+      running_processes.split("\n").each do |entry|
+        next if entry.include?('/usr/local/bin/ruby') # don't want to kill the supervisor
+        next if entry.include?('ps h -eo pid,ppid,args') # we don't need to try to kill the ps we just requested
+        next unless entry.include?('valheim_server.x86_64') # we really just want the actual running server
+
+        elements = entry.split(' ')
+        LOG.debug("Valheim Server PID: #{elements[0]}")
+        pid = elements[0]
       end
-      LOG.info("Server Thread #{thr} created.")
-      SteamHydra.set_cfg_value(:server_thread, thr)
-      sleep 10
-      LOG.debug("Server thread #{SteamHydra.config[:server_thread]} alive?: #{SteamHydra.config[:server_thread].alive?}")
-      return thr
+      LOG.info("Server pid #{pid}")
+      LOG.error("Server pid not detected, server not running.") if pid.nil?
+      SteamHydra.set_cfg_value(:server_pid, pid)
+      return pid
     end
 
     # Kills the server thread and checks for any processes hanging around
     def self.stop_server_thread()
-      Thread.kill(SteamHydra.config[:server_thread])
-      sleep 5
-      server_thread_status = SteamHydra.config[:server_thread].alive?
-      LOG.debug("Is the server thread alive? #{server_thread_status}")
-      sleep 10
-      other_processes = `ps h -eo pid,ppid,args`
-      LOG.debug("Checking child processes: \n #{other_processes}") if SteamHydra.config[:verbose]
-      other_processes.split("\n").each do |entry|
-        next if entry.include?('/usr/local/bin/ruby') # don't want to kill the supervisor
-        next if entry.include?('ps h -eo pid,ppid,args') # we don't need to try to kill the ps we just requested
-        next unless entry.include?('valheim_server.x86_64') # we really just want to interrupt the actual running server
-
-        elements = entry.split(' ')
-        LOG.debug("Running: kill -SIGINT #{elements[0]}")
-        `kill -SIGINT #{elements[0]}`
-      end
+      pid_status = `ps h -o pid,ppid,args #{SteamHydra.config[:server_pid]}`
+      server_alive = !pid_status.empty?
+      LOG.debug("Is the server thread alive? #{server_alive}")
+      `kill -SIGINT #{SteamHydra.config[:server_pid]}`
       sleep 30
       remaining_processes = `ps -eo pid,ppid,args`
       LOG.debug("Remaining processes: \n #{remaining_processes}") if SteamHydra.config[:verbose]
@@ -63,21 +59,22 @@ module SteamHydra
     def self.get_game_metadata(update_server_stored_data = true)
       current_build = {}
       begin
-      url = URI.parse("https://api.steamcmd.net/v1/info/#{SteamHydra.srv_cfg(:id)}")
-      req = Net::HTTP::Get.new(url.to_s)
-      app_info = Net::HTTP.start(url.host, url.port, use_ssl: true) {|http| http.request(req) }
-      LOG.debug("steamcmd api response: #{app_info.code}")
-      raise('bad response from server') if app_info.code == 200
-        app_details = JSON.parse(app_info.body)
-        # current released build
-        current_build = app_details['data']["#{SteamHydra.srv_cfg(:id)}"]['depots']['branches']['public']
+        steam_resp = Request.make(
+          host: 'https://api.steamcmd.net',
+          location: "/v1/info/#{SteamHydra.srv_cfg(:id)}",
+          method: :get
+        )
+        raise('bad response from server') if steam_resp[:status] != 200
+
+        app_details = JSON.parse(steam_resp[:body])
+        current_build = app_details['data'][SteamHydra.srv_cfg(:id).to_s]['depots']['branches']['public']
         LOG.debug("Retrieved Current Build info: #{current_build}")
         if update_server_stored_data
           SteamHydra.set_cfg_value(:build_id, current_build['buildid'])
           SteamHydra.set_cfg_value(:build_datetime, current_build['timeupdated'])
         end
       rescue
-        LOG.warn("Bad response from steam API server, using existing build data for update checking. No Update will occur.")
+        LOG.warn('Bad response from steam API server, using existing build data for update checking. No Update will occur.')
         current_build = {
           'buildid' => SteamHydra.config[:build_id],
           'timeupdated' => SteamHydra.config[:build_datetime]
