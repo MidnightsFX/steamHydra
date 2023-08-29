@@ -34,7 +34,8 @@ module SteamHydra
       LOG.info('Ensuring Modtools Installed.')
       case SteamHydra.config[:server]
       when 'Valheim'
-        bepInExPack_metadata = ModLibrary.thunderstore_check_for_named_mod("BepInExPack_Valheim", SteamHydra.config[:modded_metadata][:bepinex])
+        bepInExPack_metadata = ModLibrary.thunderstore_check_for_named_mod("denikson-BepInExPack_Valheim", version: SteamHydra.config[:modded_metadata][:bepinex])
+        LOG.debug("Modtool version resolved to: #{bepInExPack_metadata[:target_version]}")
         return if File.exist?("#{SteamHydra.config[:server_dir]}modloader-#{bepInExPack_metadata[:target_version]}.zip")
 
 
@@ -42,13 +43,16 @@ module SteamHydra
 
         LOG.debug("Starting download of BapInEx #{SteamHydra.config[:modded_metadata][:bepinex]}")
         LOG.debug("Looking for BepInEx: #{bepInExPack_metadata[:version_download_url]}")
-        `curl -sqL "#{bepInExPack_metadata[:version_download_url]}" -o modloader-#{bepInExPack_metadata[:target_version]}.zip`
-        `unzip -o modloader-#{bepInExPack_metadata[:target_version]}.zip`
+        FileManipulator.ensure_file("/server/modloaders", nil, false)
+        `curl -sqL "#{bepInExPack_metadata[:version_download_url]}" -o /server/modloaders/modloader-#{bepInExPack_metadata[:target_version]}.zip`
+        `unzip -o /server/modloaders/modloader-#{bepInExPack_metadata[:target_version]}.zip`
+        `rm /server/modloaders/modloader-#{bepInExPack_metadata[:target_version]}.zip`
         LOG.debug('Copying BepInEx files to correct locations.')
-        `cp -r /server/BepInExPack_Valheim/. /server/` # this depends on the current packaging format of denikson/BepInExPack_Valheim
+        `cp -r /server/modloaders/BepInExPack_Valheim/. /server/` # this depends on the current packaging format of denikson/BepInExPack_Valheim
       else
         LOG.warn("No modloader definition found for gameserver type: #{SteamHydra.config[:server]}")
       end
+      sleep 900
     end
 
     # Valdiate gamefiles and modfiles

@@ -32,6 +32,7 @@ module SteamHydra
       remaining_processes = `ps -eo pid,ppid,args`
       LOG.debug("Remaining processes: \n #{remaining_processes}") if SteamHydra.config[:verbose]
     end
+
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
       current_build_info = GameController.get_game_metadata(false)

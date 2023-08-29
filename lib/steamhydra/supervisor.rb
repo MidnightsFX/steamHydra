@@ -48,7 +48,7 @@ module SteamHydra
         60.times do
           sleep sleep_duration
           status = 'Checking server thread '
-          status += SteamHydra.config[:server_thread].to_s if SteamHydra.config[:verbose] == true
+          status += "#{SteamHydra.config[:server_thread].status} " if SteamHydra.config[:verbose] == true
           LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?}") if logstatus
           next if SteamHydra.config[:server_thread].alive?
 
@@ -68,7 +68,7 @@ module SteamHydra
       when 'Valheim'
         # Check for players and update when empty
         update_status = GameController.check_for_server_updates()
-        return true if update_status['needupdate'] == false
+        return true if update_status[:server_update] == false && update_status[:mod_updates] == false
 
         LOG.info('Update found, waiting for the server to empty.')
         loop do
@@ -106,7 +106,7 @@ module SteamHydra
       #   return false
       # end
 
-      if update_status['needupdate'] || forceupdate
+      if update_status[:server_update] || forceupdate
         unless firstrun # We don't check players if this is a first run because the server is not up
           # loop do
           #   #server_info = SteamQueries.request_server_a2s_info
