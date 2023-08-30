@@ -14,11 +14,6 @@ require 'date'
 require 'json'
 
 module SteamHydra
-  # Handle being told to kill the container
-  # Signal.trap(0, proc { puts "Terminating: #{$$}" })
-
-  #Signal.trap('INT') { SteamHydra.shutdown_hook }
-  #Signal.trap('TRAP') { SteamHydra.shutdown_hook }
 
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
@@ -27,3 +22,10 @@ module SteamHydra
     exit
   end
 end
+
+  # Handle being told to kill the container
+  Signal.trap(0, proc { puts "Terminating: #{$$}" })
+
+  Signal.trap('INT') { SteamHydra.shutdown_hook }
+  Signal.trap('TRAP') { SteamHydra.shutdown_hook }
+  Signal.trap('TERM') { SteamHydra.shutdown_hook }

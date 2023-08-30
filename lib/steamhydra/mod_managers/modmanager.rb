@@ -30,7 +30,7 @@ module SteamHydra
 
     def self.valheim_install_update_remove_mod(targeted_mods, update, staging_directory: "#{SteamHydra::FileManipulator.gem_resource_location}steamhydra/cache/modtemp", server_directory: )
       SteamHydra::FileManipulator.ensure_file(staging_directory, nil, false)
-      modprofile = ModManager.check_mod_profile()
+      modprofile = ModManager.check_mod_profile(modprofile_directory: server_directory)
       currently_installed = modprofile[:installed]
       mods_to_remove = []
       mods_to_install = []
@@ -137,15 +137,15 @@ module SteamHydra
 
       
       # Write out all of the mod profile changes so we know the current state of things for next time- regardless of container status
-      ModManager.update_mod_profile(modprofile)
+      ModManager.update_mod_profile(modprofile, modprofile_directory: server_directory)
 
     end
 
-    def self.check_mod_profile(modprofile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
-      if !File.exist?(modprofile_file)
-        File.new(modprofile_file, "w")
+    def self.check_mod_profile(modprofile_directory: SteamHydra.config[:server_dir])
+      if !File.exist?("#{modprofile_directory}mod_profile.json")
+        File.new("#{modprofile_directory}mod_profile.json", "w")
       end
-      modprofile = File.read(modprofile_file)
+      modprofile = File.read("#{modprofile_directory}mod_profile.json")
       if modprofile.empty?
         modprofile = { installed: [] }
       else
@@ -155,12 +155,12 @@ module SteamHydra
       return modprofile
     end
 
-    def self.update_mod_profile(mod_profile_data, mod_profile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
-      File.write(mod_profile_file, JSON.pretty_generate(mod_profile_data))
+    def self.update_mod_profile(mod_profile_data, modprofile_directory: SteamHydra.config[:server_dir])
+      File.write("#{modprofile_directory}mod_profile.json", JSON.pretty_generate(mod_profile_data))
     end
 
-    def self.updates_available_from_mod_profile(modprofile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
-      modprofile = JSON.parse(File.read(modprofile_file), symbolize_names: true)
+    def self.updates_available_from_mod_profile(modprofile_directory: SteamHydra.config[:server_dir])
+      modprofile = JSON.parse(File.read("#{modprofile_directory}mod_profile.json"), symbolize_names: true)
       updates_available = false
       modprofile[:installed].each do |mod|
         moddb = ModLibrary.thunderstore_check_for_named_mod(mod[:full_name])

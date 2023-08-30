@@ -88,9 +88,10 @@ module SteamHydra
     end
 
     def self.runtime_maintenance()
+      LOG.debug("Performing runtime maintenace.")
       case SteamHydra.config[:server]
       when 'Valheim'
-        SteamHydra.rotate_bepinex_log("/BepInEx/LogOutput.log") if SteamHydra.config[:modded] == true
+        SteamHydra.rotate_bepinex_log("#{SteamHydra.config[:server_dir]}/BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0) if SteamHydra.config[:modded] == true
       else
         LOG.debug("No maintenance strategy defined for #{SteamHydra.config[:server]}. Logs and other system resouces might overflow.")
       end

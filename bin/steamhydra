@@ -26,9 +26,4 @@ class CLI < Thor
   end
 end
 
-Signal.trap(0, proc { puts "Terminating: #{$$}" })
-
-Signal.trap('INT') { SteamHydra.shutdown_hook }
-Signal.trap('TRAP') { SteamHydra.shutdown_hook }
-
 CLI.start

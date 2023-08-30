@@ -2,7 +2,7 @@ FROM ruby:3.2.2-bookworm
 
 # These packages are for Gameserver & tooling support
  RUN apt-get update \
-     && apt-get -y install curl
+     && apt-get -y install curl libatomic1 libpulse-dev libpulse0
 
 # RUN apt-get update \
 #     && apt-get -y install \

@@ -36,7 +36,7 @@ RSpec.describe SteamHydra do
     end
 
     it 'should check the modprofile and moddb for updates', :modupdate do
-      puts SteamHydra::ModManager.updates_available_from_mod_profile
+      puts SteamHydra::ModManager.updates_available_from_mod_profile("#{__dir__}/test_data/mod_profile.json")
     end
   end
 end
