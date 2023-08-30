@@ -62,7 +62,8 @@ module SteamHydra
       begin
         steam_resp = Request.make(
           host: 'https://api.steamcmd.net',
-          location: "/v1/info/#{SteamHydra.srv_cfg(:id)}",
+          path: "/v1/info/#{SteamHydra.srv_cfg(:id)}",
+          headers: { "Content-Type" => "application/x-www-form-urlencoded" },
           method: :get
         )
         raise('bad response from server') if steam_resp[:status] != 200

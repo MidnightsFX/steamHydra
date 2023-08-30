@@ -28,7 +28,7 @@ module SteamHydra
       end
     end
 
-    def self.valheim_install_update_remove_mod(targeted_mods, update, staging_directory: "#{SteamHydra::FileManipulator.gem_resource_location}steamhydra/cache/modtemp/", server_directory: )
+    def self.valheim_install_update_remove_mod(targeted_mods, update, staging_directory: "#{SteamHydra::FileManipulator.gem_resource_location}steamhydra/cache/modtemp", server_directory: )
       SteamHydra::FileManipulator.ensure_file(staging_directory, nil, false)
       modprofile = ModManager.check_mod_profile()
       currently_installed = modprofile[:installed]
@@ -170,33 +170,33 @@ module SteamHydra
     end
 
     def self.thunderstore_download_mod(url, destination_file)
-      LOG.debug("Downloading file: #{url}")
+      LOG.debug("Downloading file: #{url} to #{destination_file}")
       download = URI.open(url)
       IO.copy_stream(download, destination_file)
       LOG.debug("Download complete.")
     end
 
     def self.extract_and_move_mod(staging_directory, modname, server_directory: SteamHydra.config[:server_dir])
-      LOG.debug("unzip -o #{staging_directory}#{modname}.zip")
-      status = system("unzip -o #{staging_directory}#{modname}.zip -d #{staging_directory}")
+      LOG.debug("unzip -o #{staging_directory}/#{modname}.zip")
+      status = system("unzip -o #{staging_directory}/#{modname}.zip -d #{staging_directory}")
       LOG.debug("Archive unzipped? #{status}.")
-      `rm #{staging_directory}#{modname}.zip`
+      `rm #{staging_directory}/#{modname}.zip`
       mod_folder_files = Dir.children(staging_directory)
-      FileManipulator.ensure_file("#{server_directory}BepInEx/plugins/#{modname}/" ,nil, false)
+      FileManipulator.ensure_file("#{server_directory}BepInEx/plugins/#{modname}" ,nil, false)
 
       if mod_folder_files.include?("plugins")
         LOG.debug("Copying plugins to BepInEx.")
-        `cp -r #{staging_directory}plugins/. #{server_directory}BepInEx/plugins/#{modname}`
+        `cp -r #{staging_directory}/plugins/ #{server_directory}BepInEx/plugins/#{modname}`
       end
       if mod_folder_files.include?("config")
         LOG.debug("Copying configs to BepInEx.")
-        `cp -r #{staging_directory}config/. #{server_directory}BepInEx/config`
+        `cp -r #{staging_directory}/config/ #{server_directory}BepInEx/config`
       end
 
       LOG.debug("Copying files to modfolder in plugins #{modname}")
       mod_folder_files.each do |file_folder|
         next if file_folder == "plugins" || file_folder == "config"
-        `cp -r #{staging_directory}#{file_folder} #{server_directory}BepInEx/plugins/#{modname}/#{file_folder}`
+        `cp -r #{staging_directory}/#{file_folder} #{server_directory}BepInEx/plugins/#{modname}/#{file_folder}`
       end
 
       LOG.debug("#{modname} extraction and move complete. Cleaning folder.")

@@ -43,11 +43,15 @@ module SteamHydra
 
         LOG.debug("Starting download of BapInEx #{bepInExPack_metadata[:target_version]}")
         LOG.debug("Looking for BepInEx: #{bepInExPack_metadata[:version_download_url]}")
-        `curl -sqL "#{bepInExPack_metadata[:version_download_url]}" -o #{staging_dir}/modloader-#{bepInExPack_metadata[:target_version]}.zip`
-        `unzip -o #{staging_dir}/modloader-#{bepInExPack_metadata[:target_version]}.zip -d #{staging_dir}`
+        SteamHydra::FileManipulator.ensure_file(staging_dir, nil, true)
+        ModManager.thunderstore_download_mod(bepInExPack_metadata[:version_download_url], "#{staging_dir}/modloader-#{bepInExPack_metadata[:target_version]}.zip")
+        LOG.debug("Unzipping modtools.")
+        status = system("unzip -o #{staging_dir}/modloader-#{bepInExPack_metadata[:target_version]}.zip -d #{staging_dir}")
+        LOG.debug("Archive unzipped? #{status}.")
         `rm #{staging_dir}/modloader-#{bepInExPack_metadata[:target_version]}.zip`
         LOG.debug('Copying BepInEx files to correct locations.')
-        `cp -r #{staging_dir}/BepInExPack_Valheim/. #{target_directory}` # this depends on the current packaging format of denikson/BepInExPack_Valheim
+        copy_status = system("cp -r #{staging_dir}/BepInExPack_Valheim/* #{target_directory}") # this depends on the current packaging format of denikson/BepInExPack_Valheim
+        LOG.debug("Copy status: #{copy_status}")
         `touch #{target_directory}modloader-#{bepInExPack_metadata[:target_version]}`
         `rm -rf #{staging_dir}/*`
       else

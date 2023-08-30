@@ -36,13 +36,13 @@ module SteamHydra
             response = http.request(request)
           end
           if response.code.to_i >= 400
-            if tries > max_retries
+            if tries < max_retries
               LOG.debug("Failed network request to #{args[:host]} retrying.")
               tries += 1
               # add backloff logic, consider header feedback for throttles
               next
             end
-
+            LOG.error("Code: #{response.code} Body: #{response.body}")
             raise('exceeded retrires')
           end
           headers = {}
@@ -52,11 +52,12 @@ module SteamHydra
           return { body: response.body, status: response.code.to_i, headers: headers}
         end
       rescue => e
-        LOG.warn("Failed network call #{args[:host]}/#{args[:location]}")
+        LOG.warn("Failed network call #{args[:host]}#{args[:path]}")
         LOG.warn("Error: #{e}")
         tries += 1
         retry if tries <= max_retries
         LOG.error('Unable to complete a network call. Retries exceeded.')
+        LOG.error("#{e}")
       end
     end
   end
