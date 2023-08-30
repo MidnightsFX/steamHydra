@@ -2,7 +2,7 @@ version: "3"
 services:
   vahleim:
     build: .
-    command: start Valheim --debug --verbose
+    command: start Valheim --debug
     environment:
       SessionName: 'steamhydra-debug'
       ServerMap: 'mapname2'
@@ -22,4 +22,4 @@ services:
     volumes:
       - server:/server
 volumes:
-  server: {}
+  - server:.local-development-instance/
