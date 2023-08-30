@@ -3,7 +3,7 @@ module SteamHydra
   module Supervisor
     def self.main_loop(options)
      # begin
-        # Ingest Configuration - no implemented here again
+        # Ingest Configuration - not implemented here again
         # provided_configs = { 'key' => 'value' } # placeholder, we don't ingest configs yet
         # provided_configs = ConfigLoader.discover_configurations('/config')
 
@@ -19,7 +19,8 @@ module SteamHydra
         # ConfigGen.gen_game_conf(CFG_PATH, provided_configs) # Also gen game.conf
         # ConfigGen.set_ark_globals(gameuser_cfg)
 
-        # sleep 500
+        # Manage mods to be installed/removed
+        ModManager.install_or_update_mods()
 
         # Build startup command
         StartupManager.set_startup_cmd_by_server_type()
@@ -27,7 +28,7 @@ module SteamHydra
         # Handle Validation CLI option
         # FileManipulator.validate_gamefiles(options[:validate])
         # GameController.get_game_metadata()
-
+        
         # start service
         # check if update is available
         #  - wait until server is idle to update
@@ -48,7 +49,7 @@ module SteamHydra
         60.times do
           sleep sleep_duration
           status = 'Checking server thread '
-          status += "#{SteamHydra.config[:server_thread].status} " if SteamHydra.config[:verbose] == true
+          status += "#{SteamHydra.config[:server_thread]} " if SteamHydra.config[:verbose] == true
           LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?}") if logstatus
           next if SteamHydra.config[:server_thread].alive?
 
@@ -79,6 +80,7 @@ module SteamHydra
         LOG.info('Server detected as empty, stopping the server and performing the update.')
         GameController.stop_server_thread()
         GameController.update_install_game(true)
+        ModManager.install_or_update_mods()
         GameController.start_server_thread()
       else
         LOG.warn("No Update strategy was found for: #{SteamHydra.config[:server]}. The supervisor will not automatically update this game.")

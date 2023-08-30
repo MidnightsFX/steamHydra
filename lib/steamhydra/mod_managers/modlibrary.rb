@@ -11,7 +11,7 @@ module SteamHydra
 
         tables = @mod_db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
         tables = tables.flatten
-        LOG.info("Table Status: #{tables}")
+        LOG.debug("Table Status: #{tables}")
 
         unless tables.include?("valheim_thunderstore")
           @mod_db.execute <<-SQL

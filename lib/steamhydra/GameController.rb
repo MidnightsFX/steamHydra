@@ -3,7 +3,11 @@ module SteamHydra
   module GameController
     def self.start_server_thread()
       LOG.debug("Starting Server with: #{SteamHydra.config[:start_server_cmd]}")
-      system("#{SteamHydra.config[:start_server_cmd]} &")
+      thread = Thread.new {
+        system("#{SteamHydra.config[:start_server_cmd]}")
+        LOG.info("Server Parent thread exiting.")
+      }
+      SteamHydra.set_cfg_value(:server_thread, thread)
       running_processes = `ps h -eo pid,ppid,args`
       pid = nil
       LOG.debug("Checking processes: \n #{running_processes}") if SteamHydra.config[:verbose]
@@ -36,24 +40,20 @@ module SteamHydra
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
       current_build_info = GameController.get_game_metadata(false)
-      status_details = { 'needupdate' => false }
+      status_details = { server_update: false, mod_updates: false }
       if current_build_info['buildid'] != SteamHydra.config[:build_id] || current_build_info['timeupdated'] != SteamHydra.config[:build_datetime]
-        status_details['needupdate'] = true
+        status_details[:server_update] = true
         # Since we are performing an update we need to set the current build as what we are now running, so we don't update constantly.
         SteamHydra.set_cfg_value(:build_id, current_build_info['buildid'])
         SteamHydra.set_cfg_value(:build_datetime, current_build_info['timeupdated'])
       end
       LOG.info("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
-      # This is a 'temp fix' for the newer broken details with recent steamcmd
-      # Kill steam error reports -_- which otherwise are zombies...
-      # other_processes = `ps h -eo pid,ppid,args`
-      # other_processes.split("\n").each do |entry|
-      #   next unless entry.include?('steamerrorrepor') # just looking for steamerrorrepor processes
-      # 
-      #   elements = entry.split(' ')
-      #   LOG.debug("Running: kill -SIGINT #{elements[0]}")
-      #   `kill -SIGINT #{elements[0]}`
-      # end
+
+      if SteamHydra.config[:modded] == true
+        # This updates the all available mod metadata from thunderstore
+        ModLibrary.populate_game_mod_library(:valheim)
+        
+      end
       return status_details
     end
 
@@ -88,7 +88,7 @@ module SteamHydra
     # TODO: Check success and fail if game is not installed/updated correctly
     def self.update_install_game(validate = false)
       val_cmd = 'validate' if validate
-      cmd = GameController.build_steamcmd_request("+force_install_dir /server +app_update #{SteamHydra.srv_cfg(:id)} #{val_cmd}")
+      cmd = GameController.build_steamcmd_request("+app_update #{SteamHydra.srv_cfg(:id)} -beta none #{val_cmd}")
       # TODO: Ensure that game is not running during the update | This should never be true, but we should ensure thats the case...
       LOG.debug("Updating #{SteamHydra.srv_cfg(:name)}: #{`#{cmd}`}")
       LOG.info('Updates Completed!')
@@ -96,7 +96,7 @@ module SteamHydra
 
     def self.build_steamcmd_request(request)
       full_request = []
-      full_request << "#{SteamHydra.config[:steamcmd]} +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login #{SteamHydra.config[:steamuser]}"
+      full_request << "#{SteamHydra.config[:steamcmd]} +@sSteamCmdForcePlatformType linux +force_install_dir /server +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login #{SteamHydra.config[:steamuser]}"
       full_request << request.to_s
       full_request << '+quit'
       req = full_request.join(' ')

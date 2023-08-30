@@ -80,6 +80,7 @@ module SteamHydra
         LOG.info("Starting Mod install: #{mod[:name]}")
         thunderstore_download_mod(mod[:version_download_url],"#{staging_directory}/#{mod[:name]}.zip")
         extract_and_move_mod(staging_directory, mod[:name], server_directory: server_directory)
+        modprofile[:installed] << { name: mod[:name], version: mod[:target_version] }
       end
 
       LOG.info("Requested Mod installs starting.") unless mods_to_install.empty?
@@ -90,6 +91,7 @@ module SteamHydra
           LOG.info("Starting Mod install: #{requested_mod[:name]}")
           thunderstore_download_mod(requested_mod[:version_download_url],"#{staging_directory}/#{requested_mod[:name]}.zip")
           extract_and_move_mod(staging_directory, requested_mod[:name], server_directory: server_directory)
+          modprofile[:installed] << { name: requested_mod[:name], version: requested_mod[:target_version] }
         end
       end
 
@@ -97,13 +99,16 @@ module SteamHydra
       mods_to_remove.each do |mod|
         LOG.debug("Removing #{mod}.")
         `rm -rf #{server_directory}BepInEx/plugins/#{mod}`
+        modprofile[:installed].delete_if {|m| m[:name] == mod}
       end
+      
+      # Write out all of the mod profile changes so we know the current state of things for next time- regardless of container status
+      ModManager.update_mod_profile(modprofile)
 
     end
 
-    def self.check_mod_profile()
-      modprofile_file = "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json"
-      if !File.exists?(modprofile_file)
+    def self.check_mod_profile(modprofile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
+      if !File.exist?(modprofile_file)
         File.new(modprofile_file, "w")
       end
       modprofile = File.read(modprofile_file)
@@ -113,6 +118,14 @@ module SteamHydra
         modprofile = JSON.parse(modprofile) 
       end
       return modprofile
+    end
+
+    def self.update_mod_profile(mod_profile_data, mod_profile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
+      File.write(mod_profile_file, JSON.pretty_generate(mod_profile_data))
+    end
+
+    def self.check_for_updates_from_mod_profile()
+
     end
 
     def self.thunderstore_download_mod(url, destination_file)

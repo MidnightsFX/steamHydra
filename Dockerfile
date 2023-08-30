@@ -1,9 +1,31 @@
-FROM ruby:3.1.3-buster
+FROM ruby:3.2.2-bookworm
 
-RUN apt-get update \
-    && apt-get -y install curl libc6-i386 lib32gcc1 libc6-dev libstdc++6 libatomic1 libpulse0 libpulse-dev
+# These packages are for Gameserver & tooling support
+ RUN apt-get update \
+     && apt-get -y install curl
+
+# RUN apt-get update \
+#     && apt-get -y install \
+#         libc6-dev \
+#         libstdc++6 \
+#         libsdl2-2.0-0 \
+#         libcurl4 \
+#         libc6-dev \
+#         libsdl2-2.0-0 \
+#         curl \
+#         iproute2 \
+#         libcurl4 \
+#         ca-certificates \
+#         procps \
+#         locales \
+#         unzip \
+#         libpulse-dev \
+#         libatomic1 \
+#         libc6
 
 WORKDIR /steamcmd
+# These are all for steam CMD
+RUN apt-get -y install lib32gcc-s1
 RUN curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf -
 
 # This setup is designed for local builds and testing

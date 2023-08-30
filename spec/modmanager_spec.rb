@@ -28,7 +28,7 @@ RSpec.describe SteamHydra do
       puts SteamHydra::ModManager.check_mod_profile
     end
 
-    it 'downloads and installs modfiles that are managed, removes unmanaged ones', :this do
+    it 'downloads and installs modfiles that are managed, removes unmanaged ones', :modtest do
       SteamHydra.set_debug
       ENV['Mods'] = "CreatureLevelAndLootControl,ValheimArmory"
       SteamHydra.check_and_set_server("Valheim")
