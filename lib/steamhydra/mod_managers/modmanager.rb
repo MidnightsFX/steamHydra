@@ -37,18 +37,15 @@ module SteamHydra
       mod_dependencies_to_install = []
       mod_dependencies = []
 
-      unless currently_installed.empty?
-        modprofile[:installed].each do |mod_entry|
-          next if targeted_mods.include?(mod_entry[:name]) || targeted_mods.include?(mod_entry[:full_name])
-          mods_to_remove << mod_entry[:name]
-        end
-      end
       targeted_mods.each do |requested_mod|
         # Mod not yet installed
-        if !currently_installed.include?(requested_mod[:name])
-          mods_to_install << requested_mod[:name]
-          next
+        mod_already_installed = false
+        currently_installed.each do |installed_mod|
+          name_match = installed_mod[:name] == requested_mod[:name]
+          full_name_match = installed_mod[:full_name] == requested_mod[:full_name]
+          mod_already_installed = true if name_match || full_name_match
         end
+        mods_to_install << requested_mod[:name] if mod_already_installed == false
         # Mod needs an update
         modprofile[:installed].each do |installed_mod|
           next if installed_mod[:name] != requested_mod[:name]
@@ -59,15 +56,46 @@ module SteamHydra
         end
       end
 
-      mods_to_install.each do |mod_to_install|
-        mod_metadata = ModLibrary.thunderstore_check_for_named_mod(mod_to_install)
+      # We always want to lookup dependencies for managed mods, incase they change and since they are not tracked elsewhere
+      targeted_mods.each do |target_mod|
+        mod_metadata = ModLibrary.thunderstore_check_for_named_mod(target_mod[:full_name])
         mod_metadata[:dependencies].split(",").each do |dep|
           dep_data = dep.split("-")
           next if dep_data[1] == "BepInExPack_Valheim"
           # we should consider how we want to do dependencies version enforcement here
           dep_mod_meta = ModLibrary.thunderstore_check_for_named_mod(dep_data[1])
-          mod_dependencies_to_install << dep_mod_meta[:name]
           mod_dependencies << dep_mod_meta
+          mod_dependency_already_installed = false
+          currently_installed.each do |installed_mod|
+            name_match = installed_mod[:name] == dep_mod_meta[:name]
+            full_name_match = installed_mod[:full_name] == dep_mod_meta[:full_name]
+            mod_dependency_already_installed = true if name_match || full_name_match
+          end
+          next if mod_dependency_already_installed == true
+          mod_dependencies_to_install << dep_mod_meta[:name]
+
+        end
+      end
+
+      unless currently_installed.empty?
+        modprofile[:installed].each do |mod_entry|
+          keep_mod = false
+          # Don't remove requested mods
+          targeted_mods.each do |target_mod_entry|
+            name_match = target_mod_entry[:name] == mod_entry[:name]
+            full_name_match = target_mod_entry[:full_name] == mod_entry[:full_name]
+            keep_mod = true if name_match || full_name_match
+          end
+          # Don't remove dependencies that are required
+          # This does mean that if a mod removes a dependency it will be removed here.
+          mod_dependencies.each do |dep_mod|
+            name_match = dep_mod[:name] == mod_entry[:name]
+            full_name_match = dep_mod[:full_name] == mod_entry[:full_name]
+            keep_mod = true if name_match || full_name_match
+          end
+          next if keep_mod == true
+
+          mods_to_remove << mod_entry[:name]
         end
       end
       
@@ -75,12 +103,14 @@ module SteamHydra
       LOG.info("Mod dependencies are required and will also be installed: #{mod_dependencies_to_install}") unless mod_dependencies_to_install.empty?
       LOG.info("Mods no longer managed, being removed: #{mods_to_remove}") unless mods_to_remove.empty?
 
-      LOG.info("Dependency installs started.") unless mod_dependencies_to_install.empty?
-      mod_dependencies.each do |mod|
-        LOG.info("Starting Mod install: #{mod[:name]}")
-        thunderstore_download_mod(mod[:version_download_url],"#{staging_directory}/#{mod[:name]}.zip")
-        extract_and_move_mod(staging_directory, mod[:name], server_directory: server_directory)
-        modprofile[:installed] << { name: mod[:name], version: mod[:target_version] }
+      unless mod_dependencies_to_install.empty?
+        LOG.info("Dependency installs started.")
+        mod_dependencies.each do |mod|
+          LOG.info("Starting Mod install: #{mod[:name]}")
+          thunderstore_download_mod(mod[:version_download_url],"#{staging_directory}/#{mod[:name]}.zip")
+          extract_and_move_mod(staging_directory, mod[:name], server_directory: server_directory)
+          modprofile[:installed] << { name: mod[:name], version: mod[:target_version], full_name: mod[:full_name] }
+        end
       end
 
       LOG.info("Requested Mod installs starting.") unless mods_to_install.empty?
@@ -91,16 +121,20 @@ module SteamHydra
           LOG.info("Starting Mod install: #{requested_mod[:name]}")
           thunderstore_download_mod(requested_mod[:version_download_url],"#{staging_directory}/#{requested_mod[:name]}.zip")
           extract_and_move_mod(staging_directory, requested_mod[:name], server_directory: server_directory)
-          modprofile[:installed] << { name: requested_mod[:name], version: requested_mod[:target_version] }
+          modprofile[:installed] << { name: requested_mod[:name], version: requested_mod[:target_version], full_name: requested_mod[:full_name] }
         end
       end
 
       # Delete the plugin folders of any mods that are being removed
-      mods_to_remove.each do |mod|
-        LOG.debug("Removing #{mod}.")
-        `rm -rf #{server_directory}BepInEx/plugins/#{mod}`
-        modprofile[:installed].delete_if {|m| m[:name] == mod}
+      unless mods_to_remove.empty?
+        LOG.info("Removing mods unmanaged mods.")
+        mods_to_remove.each do |mod|
+          LOG.debug("Removing #{mod}.")
+          `rm -rf #{server_directory}BepInEx/plugins/#{mod}`
+          modprofile[:installed].delete_if {|m| m[:name] == mod}
+        end
       end
+
       
       # Write out all of the mod profile changes so we know the current state of things for next time- regardless of container status
       ModManager.update_mod_profile(modprofile)
@@ -115,8 +149,9 @@ module SteamHydra
       if modprofile.empty?
         modprofile = { installed: [] }
       else
-        modprofile = JSON.parse(modprofile) 
+        modprofile = JSON.parse(modprofile, symbolize_names: true) 
       end
+      LOG.debug("returning modprofile: #{modprofile}")
       return modprofile
     end
 
@@ -124,8 +159,14 @@ module SteamHydra
       File.write(mod_profile_file, JSON.pretty_generate(mod_profile_data))
     end
 
-    def self.check_for_updates_from_mod_profile()
-
+    def self.updates_available_from_mod_profile(modprofile_file: "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_profile.json")
+      modprofile = JSON.parse(File.read(modprofile_file), symbolize_names: true)
+      updates_available = false
+      modprofile[:installed].each do |mod|
+        moddb = ModLibrary.thunderstore_check_for_named_mod(mod[:full_name])
+        updates_available = true if mod[:version] != moddb[:target_version]
+      end
+      return updates_available
     end
 
     def self.thunderstore_download_mod(url, destination_file)

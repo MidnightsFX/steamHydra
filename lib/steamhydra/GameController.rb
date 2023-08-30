@@ -52,7 +52,7 @@ module SteamHydra
       if SteamHydra.config[:modded] == true
         # This updates the all available mod metadata from thunderstore
         ModLibrary.populate_game_mod_library(:valheim)
-        
+        status_details[:mod_updates] = ModManager.updates_available_from_mod_profile
       end
       return status_details
     end

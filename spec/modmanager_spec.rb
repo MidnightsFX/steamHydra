@@ -34,5 +34,9 @@ RSpec.describe SteamHydra do
       SteamHydra.check_and_set_server("Valheim")
       SteamHydra::ModManager.install_or_update_mods(server_directory: "#{__dir__}/test_data/")
     end
+
+    it 'should check the modprofile and moddb for updates', :modupdate do
+      puts SteamHydra::ModManager.updates_available_from_mod_profile
+    end
   end
 end
