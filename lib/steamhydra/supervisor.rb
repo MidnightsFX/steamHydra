@@ -23,6 +23,7 @@ module SteamHydra
         ModManager.install_or_update_mods()
 
         # Build startup command
+        FileManipulator.ensure_file("#{SteamHydra.config[:server_dir]}/logs" ,nil, false)
         StartupManager.set_startup_cmd_by_server_type()
 
         # Handle Validation CLI option
@@ -91,7 +92,10 @@ module SteamHydra
       LOG.debug("Performing runtime maintenace.")
       case SteamHydra.config[:server]
       when 'Valheim'
-        SteamHydra.rotate_bepinex_log("#{SteamHydra.config[:server_dir]}/BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0) if SteamHydra.config[:modded] == true
+        if SteamHydra.config[:modded] == true
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}/BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0)
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}/logs/valheim.log", bytesize: 1, rotated_size: 0)
+        end
       else
         LOG.debug("No maintenance strategy defined for #{SteamHydra.config[:server]}. Logs and other system resouces might overflow.")
       end

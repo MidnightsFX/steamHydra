@@ -62,6 +62,8 @@ module SteamHydra
     # Default user configurations
     case SteamHydra.config[:server]
     when 'Valheim'
+      save_interval = ENV['SaveInterval'].nil? ? 300 : ENV['SaveInterval'].to_i
+      SteamHydra.set_cfg_value(:valheim, {world_save_interval: save_interval})
       port = ENV['Port'].nil? ? 2456 : ENV['Port'].to_i
       SteamHydra.set_cfg_value(:port, port)
       servermap = ENV['ServerMap'].nil? ? 'Niflheim' : ENV['ServerMap']
@@ -75,6 +77,8 @@ module SteamHydra
           # Set modlist here
         end
       end
+      SteamHydra.config[:valheim][:world_save_interval]
+      
       SteamHydra.set_cfg_value(:public, 1)
       if ENV['Public']
         listgame = ENV['Public'].to_i.zero? || ENV['Public'].downcase == 'false' ? 0 : 1

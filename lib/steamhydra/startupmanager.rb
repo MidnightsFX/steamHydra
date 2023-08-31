@@ -44,6 +44,7 @@ module SteamHydra
       command << "PORT=#{SteamHydra.config[:port]}"
       command << "WORLDNAME='#{SteamHydra.config[:servermap]}'"
       command << "SAVEDIR='#{SteamHydra.config[:server_dir]}saves/#{SteamHydra.config[:servermap]}'"
+      command << "WORLDSAVEINTERVAL='#{SteamHydra.config[:valheim][:world_save_interval]}'"
       command << ".#{file}"
       full_command = command.join(' ')
       LOG.debug("Built Valheim startup command: #{full_command}")

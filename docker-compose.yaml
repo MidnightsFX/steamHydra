@@ -7,6 +7,7 @@ services:
       SessionName: 'steamhydra-debug'
       ServerMap: 'mapname2'
       ServerPass: 'password3'
+      SaveInterval: 300
       # Port: 2456
       EnableMods: 'true'
       # Modloader: 'latest'
@@ -20,6 +21,4 @@ services:
       - 2458:2458
       - 2458:2458/udp
     volumes:
-      - server:/server
-volumes:
-  - server:.local-development-instance/
+      - ./local-development-instance:/server/
