@@ -8,8 +8,16 @@ module SteamHydra
       if SteamHydra.config[:modded] != true
         LOG.debug("Mods not enabled, not installing any mods.")
       end
+      if ENV['Mods'].nil?
+        LOG.info("No mods set, skipping mod install.")
+        return
+      end
 
+      
       modlist = ENV['Mods'].split(",")
+        
+      
+      
 
       case SteamHydra.config[:server]
       when 'Valheim'
