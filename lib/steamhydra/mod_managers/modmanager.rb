@@ -15,9 +15,9 @@ module SteamHydra
       when 'Valheim'
         resolved_mods = []
         modlist.each do |mod|
-          mod_and_version = mod.split("-")
+          mod_and_version = mod.split("+")
           if mod_and_version.length > 1
-            resolved_mods << ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0], mod_and_version[1])
+            resolved_mods << ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0], version: mod_and_version[1])
           else
             resolved_mods << ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0])
           end

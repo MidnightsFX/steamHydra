@@ -30,7 +30,7 @@ RSpec.describe SteamHydra do
 
     it 'downloads and installs modfiles that are managed, removes unmanaged ones', :modtest do
       SteamHydra.set_debug
-      ENV['Mods'] = "CreatureLevelAndLootControl,ValheimArmory"
+      ENV['Mods'] = "ValheimArmory,EpicLoot+0.9.20,LVH-IT-UseEquipmentInWater,Smoothbrain-CreatureLevelAndLootControl+4.5.11"
       SteamHydra.check_and_set_server("Valheim")
       SteamHydra::ModManager.install_or_update_mods(server_directory: "#{__dir__}/test_data/")
     end
