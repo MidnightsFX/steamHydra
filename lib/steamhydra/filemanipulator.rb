@@ -34,6 +34,7 @@ module SteamHydra
       LOG.info('Ensuring Modtools Installed.')
       case SteamHydra.config[:server]
       when 'Valheim'
+        ModLibrary.populate_game_mod_library(:valheim)
         bepInExPack_metadata = ModLibrary.thunderstore_check_for_named_mod("denikson-BepInExPack_Valheim", version: SteamHydra.config[:modded_metadata][:bepinex])
         LOG.debug("Modtool version resolved to: #{bepInExPack_metadata[:target_version]}")
         if File.exist?("#{target_directory}modloader-#{bepInExPack_metadata[:target_version]}")

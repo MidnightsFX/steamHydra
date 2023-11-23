@@ -52,6 +52,9 @@ module SteamHydra
           status = 'Checking server thread '
           status += "#{SteamHydra.config[:server_thread]} " if SteamHydra.config[:verbose] == true
           LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?}") if logstatus
+          pid_status = `ps h -o pid,ppid,args #{SteamHydra.config[:server_pid]}`
+          server_alive = !pid_status.empty?
+          next if server_alive # the server pid still running is perhaphs the most important here, if the parent thread dies- thats ok. If both are dead, its a failure scenario.
           next if SteamHydra.config[:server_thread].alive?
 
           SteamHydra.config[:server_failures] += 1

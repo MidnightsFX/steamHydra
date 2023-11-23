@@ -71,6 +71,7 @@ module SteamHydra
 
     def self.check_for_named_mod(modname, modsource)
       mod_results = @mod_db.execute("SELECT * FROM #{modsource} WHERE full_name LIKE '%#{modname}%'")
+      LOG.debug("Mod Search #{modname} Result: #{mod_results}")
       selected_mod = mod_results[0]
       mod_hash = { name: selected_mod[0], owner: selected_mod[1], full_name: selected_mod[2], package_url: selected_mod[3], date_updated: selected_mod[4], uuid4: selected_mod[5], current_version: selected_mod[6], download_url: selected_mod[7], dependencies: selected_mod[8] }
       if mod_results.length > 1
