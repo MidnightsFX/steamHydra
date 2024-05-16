@@ -11,7 +11,7 @@ services:
       # Port: 2456
       EnableMods: 'true'
       # Modloader: 'latest'
-      Mods: ValheimArmory,EpicLoot,UseEquipmentInWater,Foraging,Lumberjacking,Ranching,SolidHitboxes,CreatureLevelAndLootControl,Endurance
+      Mods: ValheimArmory,Smoothbrain-Jewelcrafting,UseEquipmentInWater,Foraging,Lumberjacking,Ranching,SolidHitboxes,CreatureLevelAndLootControl,Endurance
       # Public: 'false'
     ports:
       - 2456:2456

@@ -51,9 +51,10 @@ module SteamHydra
           sleep sleep_duration
           status = 'Checking server thread '
           status += "#{SteamHydra.config[:server_thread]} " if SteamHydra.config[:verbose] == true
-          LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?}") if logstatus
+          
           pid_status = `ps h -o pid,ppid,args #{SteamHydra.config[:server_pid]}`
           server_alive = !pid_status.empty?
+          LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?} pid_status: #{pid_status}") if logstatus
           next if server_alive # the server pid still running is perhaphs the most important here, if the parent thread dies- thats ok. If both are dead, its a failure scenario.
           next if SteamHydra.config[:server_thread].alive?
 

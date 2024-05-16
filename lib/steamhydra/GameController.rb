@@ -7,6 +7,7 @@ module SteamHydra
         system("#{SteamHydra.config[:start_server_cmd]}")
         LOG.info("Server Parent thread exiting.")
       }
+      sleep 10
       SteamHydra.set_cfg_value(:server_thread, thread)
       running_processes = `ps h -eo pid,ppid,args`
       pid = nil
@@ -22,8 +23,14 @@ module SteamHydra
       end
       LOG.info("Server pid #{pid}")
       LOG.error("Server pid not detected, server not running.") if pid.nil?
-      SteamHydra.set_cfg_value(:server_pid, pid)
+      set_server_pid(pid)
       return pid
+    end
+
+    def self.set_server_pid(pid)
+      LOG.debug("Setting server pid #{pid} setting file #{SteamHydra.config[:server_dir]}server_pid")
+      SteamHydra.set_cfg_value(:server_pid, pid)
+      File.write("#{SteamHydra.config[:server_dir]}server_pid", "#{pid}")
     end
 
     # Kills the server thread and checks for any processes hanging around
@@ -31,7 +38,7 @@ module SteamHydra
       pid_status = `ps h -o pid,ppid,args #{SteamHydra.config[:server_pid]}`
       server_alive = !pid_status.empty?
       LOG.debug("Is the server thread alive? #{server_alive}")
-      `kill -SIGINT #{SteamHydra.config[:server_pid]}`
+      `kill -n 2 #{SteamHydra.config[:server_pid]}`
       sleep 30
       remaining_processes = `ps -eo pid,ppid,args`
       LOG.debug("Remaining processes: \n #{remaining_processes}") if SteamHydra.config[:verbose]
@@ -40,12 +47,14 @@ module SteamHydra
     # Checks for updates for the Game server, returns status based on the update information.
     def self.check_for_server_updates()
       current_build_info = GameController.get_game_metadata(false)
+      load_game_metadata_from_local_cache()
       status_details = { server_update: false, mod_updates: false }
       if current_build_info['buildid'] != SteamHydra.config[:build_id] || current_build_info['timeupdated'] != SteamHydra.config[:build_datetime]
         status_details[:server_update] = true
         # Since we are performing an update we need to set the current build as what we are now running, so we don't update constantly.
         SteamHydra.set_cfg_value(:build_id, current_build_info['buildid'])
         SteamHydra.set_cfg_value(:build_datetime, current_build_info['timeupdated'])
+        write_game_metadata_to_local_cache(current_build_info)
       end
       LOG.info("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
 
@@ -55,6 +64,21 @@ module SteamHydra
         status_details[:mod_updates] = ModManager.updates_available_from_mod_profile
       end
       return status_details
+    end
+
+    def self.write_game_metadata_to_local_cache(current_game_metadata)
+      game_metadata_file_location = "#{SteamHydra::FileManipulator.gem_resource_location}steamhydra/cache/#{SteamHydra.config[:server]}_metadata.json}"
+      File.write(game_metadata_file_location, JSON.pretty_generate(current_game_metadata))
+    end
+
+    def self.load_game_metadata_from_local_cache()
+      game_metadata_file_location = "#{SteamHydra::FileManipulator.gem_resource_location}steamhydra/cache/#{SteamHydra.config[:server]}_metadata.json}"
+       return if !File.exist?(game_metadata_file_location)
+      modprofile = File.read(game_metadata_file_location)
+      json_game_metadata = JSON.parse(modprofile)
+      SteamHydra.set_cfg_value(:build_id, json_game_metadata['buildid'])
+      SteamHydra.set_cfg_value(:build_datetime, json_game_metadata['timeupdated'])
+      return json_game_metadata
     end
 
     def self.get_game_metadata(update_server_stored_data = true)

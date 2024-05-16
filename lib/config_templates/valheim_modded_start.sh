@@ -1,7 +1,8 @@
 #!/bin/sh
 export DOORSTOP_ENABLE=TRUE
 export DOORSTOP_INVOKE_DLL_PATH=./BepInEx/core/BepInEx.Preloader.dll
-export DOORSTOP_CORLIB_OVERRIDE_PATH=./unstripped_corlib
+# Valheim no longer runs with a stripped corelib, so this isn't needed
+# export DOORSTOP_CORLIB_OVERRIDE_PATH=./unstripped_corlib
 
 export LD_LIBRARY_PATH="./doorstop_libs:$LD_LIBRARY_PATH"
 export LD_PRELOAD="libdoorstop_x64.so:$LD_PRELOAD"

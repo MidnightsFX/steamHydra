@@ -24,11 +24,17 @@ module SteamHydra
         resolved_mods = []
         modlist.each do |mod|
           mod_and_version = mod.split("+")
+          mod_result = nil
           if mod_and_version.length > 1
-            resolved_mods << ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0], version: mod_and_version[1])
+            mod_result = ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0], version: mod_and_version[1])
           else
-            resolved_mods << ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0])
+            mod_result = ModLibrary.thunderstore_check_for_named_mod(mod_and_version[0])
           end
+          if mod_result.nil?
+            LOG.warn("#{mod_and_version[0]} search did not result in any mods, skipping to next mod.")
+            next
+          end
+          resolved_mods << mod_result
         end
         ModManager.valheim_install_update_remove_mod(resolved_mods, update, server_directory: server_directory)
       else
@@ -70,8 +76,10 @@ module SteamHydra
         mod_metadata[:dependencies].split(",").each do |dep|
           dep_data = dep.split("-")
           next if dep_data[1] == "BepInExPack_Valheim"
+
+          LOG.info("Checking for requested dependency mod: #{dep_data[0]}-#{dep_data[1]}")
           # we should consider how we want to do dependencies version enforcement here
-          dep_mod_meta = ModLibrary.thunderstore_check_for_named_mod(dep_data[1])
+          dep_mod_meta = ModLibrary.thunderstore_check_for_named_mod_by_author(dep_data[1], dep_data[0])
           mod_dependencies << dep_mod_meta
           mod_dependency_already_installed = false
           currently_installed.each do |installed_mod|
@@ -143,7 +151,6 @@ module SteamHydra
         end
       end
 
-      
       # Write out all of the mod profile changes so we know the current state of things for next time- regardless of container status
       ModManager.update_mod_profile(modprofile, modprofile_directory: server_directory)
 
@@ -157,13 +164,23 @@ module SteamHydra
       if modprofile.empty?
         modprofile = { installed: [] }
       else
-        modprofile = JSON.parse(modprofile, symbolize_names: true) 
+        modprofile = JSON.parse(modprofile, symbolize_names: true)
       end
       LOG.debug("returning modprofile: #{modprofile}")
       return modprofile
     end
 
     def self.update_mod_profile(mod_profile_data, modprofile_directory: SteamHydra.config[:server_dir])
+      current_install_metadata = {}
+      mod_profile_data[:installed].each do |entry|
+        # we always take the key because the newest versions are always listed at the bottom
+        current_install_metadata[entry[:name]] = entry
+      end
+      mod_profile_data[:installed] = []
+      current_install_metadata.each do |key, value|
+        mod_profile_data[:installed] << value
+      end
+
       File.write("#{modprofile_directory}mod_profile.json", JSON.pretty_generate(mod_profile_data))
     end
 

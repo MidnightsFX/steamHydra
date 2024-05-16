@@ -24,7 +24,8 @@ module SteamHydra
               uuid4 text,
               current_version text,
               download_url text,
-              dependencies text
+              dependencies text,
+              rating int
             );
           SQL
         end
@@ -46,8 +47,8 @@ module SteamHydra
           download_url = entry["versions"][0]["download_url"].gsub("/#{ver}/","")
           dependencies = entry["versions"][0]["dependencies"].join(",")
           # Insert the important stuff into the local db
-          @mod_db.execute("REPLACE INTO valheim_thunderstore (name, owner, full_name, package_url, date_updated, uuid4, current_version, download_url, dependencies)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [entry["name"], entry["owner"], entry["full_name"], entry["package_url"], entry["date_updated"], entry["uuid"], ver, download_url, dependencies])
+          @mod_db.execute("REPLACE INTO valheim_thunderstore (name, owner, full_name, package_url, date_updated, uuid4, current_version, download_url, dependencies, rating)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [entry["name"], entry["owner"], entry["full_name"], entry["package_url"], entry["date_updated"], entry["uuid"], ver, download_url, dependencies, entry["rating_score"]])
         end
 
       else
@@ -58,20 +59,31 @@ module SteamHydra
 
     def self.thunderstore_check_for_named_mod(modname, version: 'latest')
       mod_info = ModLibrary.check_for_named_mod(modname, 'valheim_thunderstore')
-      selected_version = ""
-      if version == "latest"
-        selected_version = mod_info[:current_version]
-      else
-        selected_version = version
-      end
-      mod_info[:version_download_url] = "#{mod_info[:download_url]}/#{selected_version}/"
-      mod_info[:target_version] = selected_version
-      return mod_info
+      return select_mod_from_thunderstore(mod_info, version)
+    end
+
+    def self.thunderstore_check_for_named_mod_by_author(modname, author, version: 'latest')
+      mod_info = ModLibrary.check_for_named_mod_by_author(modname, author, 'valheim_thunderstore')
+      return select_mod_from_thunderstore(mod_info, version)
+    end
+
+    def self.check_for_named_mod_by_author(modname, author, modsource)
+      lookup = "SELECT * FROM #{modsource} WHERE name = '#{modname}' AND owner = '#{author}'"
+      LOG.debug("Searching local cached mod-db: #{lookup}")
+      mod_results = @mod_db.execute(lookup)
+      return select_mod_from_modsource_results(mod_results, modname)
     end
 
     def self.check_for_named_mod(modname, modsource)
-      mod_results = @mod_db.execute("SELECT * FROM #{modsource} WHERE full_name LIKE '%#{modname}%'")
-      LOG.debug("Mod Search #{modname} Result: #{mod_results}")
+      lookup = "SELECT * FROM #{modsource} WHERE full_name LIKE '%#{modname}%' ORDER BY rating DESC"
+      LOG.debug("Searching local cached mod-db: #{lookup}")
+      mod_results = @mod_db.execute(lookup)
+      return select_mod_from_modsource_results(mod_results, modname)
+    end
+
+    def self.select_mod_from_modsource_results(mod_results, modname)
+      return nil if mod_results.empty?
+      LOG.debug("Mod Search Result: #{mod_results}")
       selected_mod = mod_results[0]
       mod_hash = { name: selected_mod[0], owner: selected_mod[1], full_name: selected_mod[2], package_url: selected_mod[3], date_updated: selected_mod[4], uuid4: selected_mod[5], current_version: selected_mod[6], download_url: selected_mod[7], dependencies: selected_mod[8] }
       if mod_results.length > 1
@@ -83,6 +95,19 @@ module SteamHydra
         LOG.warn("Mods found when searching '#{modname}' : #{available_modnames}")
       end
       return mod_hash
+    end
+
+    def self.select_mod_from_thunderstore(mod_info, version)
+      return nil if mod_info.empty?
+      selected_version = ""
+      if version == "latest"
+        selected_version = mod_info[:current_version]
+      else
+        selected_version = version
+      end
+      mod_info[:version_download_url] = "#{mod_info[:download_url]}/#{selected_version}/"
+      mod_info[:target_version] = selected_version
+      return mod_info
     end
 
     # SQLite3::Database.new( "data.db" ) do |db|

@@ -17,7 +17,9 @@ module SteamHydra
 
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
-    `kill -SIGINT #{SteamHydra.config[:server_pid]}`
+    pid = `cat /server/server_pid`
+    `kill -n 2 #{pid}`
+    sleep 30
     puts 'Server exited.'
     exit
   end
@@ -26,6 +28,6 @@ end
   # Handle being told to kill the container
   Signal.trap(0, proc { puts "Terminating: #{$$}" })
 
-  Signal.trap('INT') { SteamHydra.shutdown_hook }
-  Signal.trap('TRAP') { SteamHydra.shutdown_hook }
-  Signal.trap('TERM') { SteamHydra.shutdown_hook }
+  Signal.trap('INT') { SteamHydra.shutdown_hook("INT") }
+  Signal.trap('TRAP') { SteamHydra.shutdown_hook("TRAP") }
+  Signal.trap('TERM') { SteamHydra.shutdown_hook("TERM") }

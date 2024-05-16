@@ -24,13 +24,18 @@ RSpec.describe SteamHydra do
       puts "Mod: #{mod_result}"
     end
 
+    it 'updates the local moddb', :update_moddb do
+      SteamHydra::ModLibrary.create_modtables_if_missing
+      SteamHydra::ModLibrary.populate_game_mod_library(:valheim)
+    end
+
     it 'checks the local modprofile cache' do 
       puts SteamHydra::ModManager.check_mod_profile
     end
 
     it 'downloads and installs modfiles that are managed, removes unmanaged ones', :modtest do
       SteamHydra.set_debug
-      ENV['Mods'] = "ValheimArmory,EpicLoot+0.9.20,LVH-IT-UseEquipmentInWater,Smoothbrain-CreatureLevelAndLootControl+4.5.11"
+      ENV['Mods'] = "ValheimFortress,ValheimArmory,EpicLoot+0.9.20,LVH-IT-UseEquipmentInWater,Smoothbrain-CreatureLevelAndLootControl+4.5.11"
       SteamHydra.check_and_set_server("Valheim")
       SteamHydra::ModManager.install_or_update_mods(server_directory: "#{__dir__}/test_data/")
     end
