@@ -35,11 +35,15 @@ module SteamHydra
       end
     end
 
-    def self.populate_game_mod_library(game)
+    def self.populate_game_mod_library(game, require_update = false)
 
       case game
 
       when :valheim
+        # return early if the database already exists and we don't care if its super up to date
+        if check_for_valheim_thunderstore_table && require_update == false
+          return
+        end
         # Valheim currently supports thunderstore so we will use it to manage mods
         modlist = SteamHydra::ThunderstoreAPI.get_available_modlist('valheim')
         modlist.each do |entry|
@@ -55,6 +59,17 @@ module SteamHydra
         LOG.warn("Invalid game (#{game}) passed to modmanager, please add support for the game before building its mod-library.")
       end
 
+    end
+
+    def self.check_for_valheim_thunderstore_table()
+      tables = @mod_db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+      tables = tables.flatten
+      LOG.debug("Table Status: #{tables}")
+      if tables.include?("valheim_thunderstore")
+        return true
+      else
+        return false
+      end
     end
 
     def self.thunderstore_check_for_named_mod(modname, version: 'latest')
@@ -98,6 +113,7 @@ module SteamHydra
     end
 
     def self.select_mod_from_thunderstore(mod_info, version)
+      return nil if mod_info.nil?
       return nil if mod_info.empty?
       selected_version = ""
       if version == "latest"

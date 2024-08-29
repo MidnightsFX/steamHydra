@@ -18,8 +18,8 @@ module SteamHydra
   def self.shutdown_hook(signal = nil)
     puts "Recieved signal: #{signal}, starting shutdown."
     pid = `cat /server/server_pid`
-    `kill -n 2 #{pid}`
-    sleep 30
+    `kill -s SIGINT #{pid}`
+    sleep 120
     puts 'Server exited.'
     exit
   end

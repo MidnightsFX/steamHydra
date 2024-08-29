@@ -13,11 +13,7 @@ module SteamHydra
         return
       end
 
-      
       modlist = ENV['Mods'].split(",")
-        
-      
-      
 
       case SteamHydra.config[:server]
       when 'Valheim'

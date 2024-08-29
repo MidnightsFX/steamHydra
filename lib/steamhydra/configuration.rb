@@ -21,6 +21,18 @@ module SteamHydra
     SteamHydra.set_cfg_value(:verbose, true)
   end
 
+  def self.set_validate
+    SteamHydra.set_cfg_value(:validate, true)
+  end
+
+  def self.set_update_mods_on_start
+    SteamHydra.set_cfg_value(:update_mods_on_start, true)
+  end
+
+  def self.set_auto_restart
+    SteamHydra.set_cfg_value(:auto_restart, true)
+  end
+
   # For testing purposes, no logging
   def self.set_fatal
     SteamHydra::LOG.level = Logger::FATAL
@@ -55,7 +67,9 @@ module SteamHydra
     SteamHydra.set_cfg_value(:server_dir, '/server/')
     SteamHydra.set_cfg_value(:steamuser, 'Anonymous')
     SteamHydra.set_cfg_value(:verbose, false)
+    SteamHydra.set_cfg_value(:validate, false)
     SteamHydra.set_cfg_value(:modded, false)
+    SteamHydra.set_cfg_value(:update_mods_on_start, false)
     SteamHydra.set_cfg_value(:gem_dir, __dir__[0..-12])
     SteamHydra.set_cfg_value(:server_failures, 0)
 

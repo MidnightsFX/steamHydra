@@ -11,7 +11,7 @@ services:
       # Port: 2456
       EnableMods: 'true'
       # Modloader: 'latest'
-      Mods: ValheimArmory,Smoothbrain-Jewelcrafting,UseEquipmentInWater,Foraging,Lumberjacking,Ranching,SolidHitboxes,CreatureLevelAndLootControl,Endurance
+      # Mods: ValheimModding-Jotunn,MidnightMods-ValheimArmory,MidnightMods-ValheimFortress,MidnightMods-RecipeManager,MidnightMods-EpicJewels,Smoothbrain-Jewelcrafting,JereKuusela-Server_devcommands
       # Public: 'false'
     ports:
       - 2456:2456

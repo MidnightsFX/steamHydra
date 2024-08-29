@@ -38,8 +38,13 @@ module SteamHydra
       pid_status = `ps h -o pid,ppid,args #{SteamHydra.config[:server_pid]}`
       server_alive = !pid_status.empty?
       LOG.debug("Is the server thread alive? #{server_alive}")
-      `kill -n 2 #{SteamHydra.config[:server_pid]}`
-      sleep 30
+      kp1 = "kill -s SIGINT #{SteamHydra.config[:server_pid]}"
+      `#{kp1}`
+      sleep 180
+      pid = `cat /server/server_pid`
+      kp2 = "kill -s SIGINT #{pid}"
+      `#{kp2}`
+      Thread.kill(SteamHydra.config[:server_thread])
       remaining_processes = `ps -eo pid,ppid,args`
       LOG.debug("Remaining processes: \n #{remaining_processes}") if SteamHydra.config[:verbose]
     end
@@ -56,13 +61,13 @@ module SteamHydra
         SteamHydra.set_cfg_value(:build_datetime, current_build_info['timeupdated'])
         write_game_metadata_to_local_cache(current_build_info)
       end
-      LOG.info("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
-
-      if SteamHydra.config[:modded] == true
+      
+      if SteamHydra.config[:modded] == true 
         # This updates the all available mod metadata from thunderstore
-        ModLibrary.populate_game_mod_library(:valheim)
+        ModLibrary.populate_game_mod_library(:valheim, true)
         status_details[:mod_updates] = ModManager.updates_available_from_mod_profile
       end
+      LOG.info("Update Status for #{SteamHydra.srv_cfg(:name)}: #{status_details}")
       return status_details
     end
 
@@ -113,7 +118,7 @@ module SteamHydra
     # TODO: Check success and fail if game is not installed/updated correctly
     def self.update_install_game(validate = false)
       val_cmd = 'validate' if validate
-      cmd = GameController.build_steamcmd_request("+app_update #{SteamHydra.srv_cfg(:id)} -beta none #{val_cmd}")
+      cmd = GameController.build_steamcmd_request("+app_update #{SteamHydra.srv_cfg(:id)} #{val_cmd}")
       # TODO: Ensure that game is not running during the update | This should never be true, but we should ensure thats the case...
       LOG.debug("Updating #{SteamHydra.srv_cfg(:name)}: #{`#{cmd}`}")
       LOG.info('Updates Completed!')

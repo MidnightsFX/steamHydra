@@ -19,16 +19,19 @@ module SteamHydra
         # ConfigGen.gen_game_conf(CFG_PATH, provided_configs) # Also gen game.conf
         # ConfigGen.set_ark_globals(gameuser_cfg)
 
+        # Handle Validation CLI option
+        FileManipulator.validate_gamefiles(SteamHydra.config[:validate])
+        # GameController.get_game_metadata()
+
         # Manage mods to be installed/removed
+        if SteamHydra.config[:update_mods_on_start]
+          ModLibrary.populate_game_mod_library(SteamHydra.config[:server].downcase.to_sym, true)
+        end
         ModManager.install_or_update_mods()
 
         # Build startup command
         FileManipulator.ensure_file("#{SteamHydra.config[:server_dir]}/logs" ,nil, false)
         StartupManager.set_startup_cmd_by_server_type()
-
-        # Handle Validation CLI option
-        # FileManipulator.validate_gamefiles(options[:validate])
-        # GameController.get_game_metadata()
         
         # start service
         # check if update is available
@@ -57,11 +60,15 @@ module SteamHydra
           LOG.debug("#{status}livliness: #{SteamHydra.config[:server_thread].alive?} pid_status: #{pid_status}") if logstatus
           next if server_alive # the server pid still running is perhaphs the most important here, if the parent thread dies- thats ok. If both are dead, its a failure scenario.
           next if SteamHydra.config[:server_thread].alive?
+          LOG.warn("Could not find server thread running or pid. #{pid_status}}")
 
-          SteamHydra.config[:server_failures] += 1
-          raise('Repeated server failures detected, killing the monitor process. Ensure your server configs are allowing the server to startup correctly.') if SteamHydra.config[:server_failures] == 10
+          if SteamHydra.config[:auto_restart]
+            SteamHydra.config[:server_failures] += 1
+            raise('Repeated server failures detected, killing the monitor process. Ensure your server configs are allowing the server to startup correctly.') if SteamHydra.config[:server_failures] == 10
 
-          GameController.start_server_thread()
+            GameController.start_server_thread()
+            sleep 30
+          end
         end
         Supervisor.runtime_maintenance()
         Supervisor.update_strategy()
@@ -84,7 +91,9 @@ module SteamHydra
         end
         LOG.info('Server detected as empty, stopping the server and performing the update.')
         GameController.stop_server_thread()
-        GameController.update_install_game(true)
+        if update_status[:server_update]
+          GameController.update_install_game(true)
+        end
         ModManager.install_or_update_mods()
         GameController.start_server_thread()
       else
@@ -97,8 +106,8 @@ module SteamHydra
       case SteamHydra.config[:server]
       when 'Valheim'
         if SteamHydra.config[:modded] == true
-        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}/BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0)
-        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}/logs/valheim.log", bytesize: 1, rotated_size: 0)
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0)
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}logs/valheim.log", bytesize: 1, rotated_size: 0)
         end
       else
         LOG.debug("No maintenance strategy defined for #{SteamHydra.config[:server]}. Logs and other system resouces might overflow.")
