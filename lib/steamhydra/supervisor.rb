@@ -49,6 +49,7 @@ module SteamHydra
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
       GameController.start_server_thread()
+      start_time = Time.now.to_i
       loop do
         60.times do
           sleep sleep_duration
@@ -72,6 +73,22 @@ module SteamHydra
         end
         Supervisor.runtime_maintenance()
         Supervisor.update_strategy()
+        Supervisor.nightly_restarts(start_time)
+      end
+    end
+
+    def self.nightly_restarts(start_time)
+      if Time.now.to_i > start_time + 86400
+        loop do
+          break if SteamQueries.check_for_active_players() == false
+
+          sleep 120
+        end
+        LOG.info('Server detected as empty, restarting the server.')
+        GameController.stop_server_thread()
+        sleep 30
+        GameController.start_server_thread()
+        start_time = Time.now.to_i
       end
     end
 
@@ -117,7 +134,7 @@ module SteamHydra
     # Run-once check for an update, if an update is available will update and start back up
     def self.check_for_updates(_logstatus: true, firstrun: false, forceupdate: false)
       LOG.debug('Starting Checks for updates.')
-      update_status = GameController.check_for_server_updates()
+      update_status = GameController.check_for_server_updates(firstrun)
       # missing_mods_status = GameController.check_for_missing_mods
       # mod_updates_needed = GameController.check_for_mod_updates
       # LOG.debug("Updates Needed: GameServer-#{update_status['needupdate']} MODS-#{mod_updates_needed} Mods Missing?-#{missing_mods_status}")

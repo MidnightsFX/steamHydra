@@ -9,6 +9,7 @@ class CLI < Thor
   desc('start <server_name>', "Starts the Steam server lifecycle manager with the specified server. Valid servers are: #{SteamHydra::SUPPORTED_SERVERS.keys}")
   option :validate, aliases: :v, type: :boolean,  default: false, desc: 'Validate gamefiles and mods before starting'
   option :update_mods_on_start, aliases: :u, type: :boolean, default: false, desc: 'Update the mod-db on startup to ensure up to date mods are pulled in'
+  option :crossplay, type: :boolean, default: false, desc: 'Enables starting the server in crossplay mode'
   # option :showcfg, type: :boolean, default: true, desc: 'Print generated configurations during startup'
   option :auto_restart, type: :boolean, default: false, desc: 'Automatically restart the game process if it is not detected.'
   option :verbose, type: :boolean, default: false, desc: 'Enables log spam. Pair with debug logging for fininite details on whats happening.'
@@ -25,6 +26,7 @@ class CLI < Thor
     SteamHydra.set_validate if options[:validate]
     SteamHydra.set_update_mods_on_start if options[:update_mods_on_start]
     SteamHydra.set_auto_restart if options[:auto_restart]
+    SteamHydra.set_crossplay if options[:crossplay]
     # SteamHydra.set_cfg_value(:showcfg, options[:showcfg])
     # kick off startup workflow and watcher
     SteamHydra::Supervisor.main_loop(options)

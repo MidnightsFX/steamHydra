@@ -2,7 +2,7 @@ version: "3"
 services:
   vahleim:
     build: .
-    command: start Valheim --debug
+    command: start Valheim --debug --showstatus=false --update_mods_on_start=false
     environment:
       SessionName: 'steamhydra-debug'
       ServerMap: 'mapname2'
@@ -11,7 +11,7 @@ services:
       # Port: 2456
       EnableMods: 'true'
       # Modloader: 'latest'
-      # Mods: ValheimModding-Jotunn,MidnightMods-ValheimArmory,MidnightMods-ValheimFortress,MidnightMods-RecipeManager,MidnightMods-EpicJewels,Smoothbrain-Jewelcrafting,JereKuusela-Server_devcommands
+      # Mods: ValheimModding-Jotunn,MidnightMods-ValhimArmory
       # Public: 'false'
     ports:
       - 2456:2456

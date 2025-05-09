@@ -7,6 +7,14 @@ module SteamHydra
     @mod_db = SQLite3::Database.new "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_library.db"
 
     def self.create_modtables_if_missing()
+      if check_for_table("modmanager_updates") == false
+        @mod_db.execute <<-SQL
+            CREATE TABLE modmanager_updates (
+              name text UNIQUE,
+              last_update int
+            );
+          SQL
+      end
       unless @mod_db.table_info('valheim_thunderstore').nil?
 
         tables = @mod_db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
@@ -30,12 +38,12 @@ module SteamHydra
           SQL
         end
 
-        ModLibrary.populate_game_mod_library(:valheim)
+        ModLibrary.populate_game_mod_library(:valheim, true)
 
       end
     end
 
-    def self.populate_game_mod_library(game, require_update = false)
+    def self.populate_game_mod_library(game, require_update = false, recent_update = true)
 
       case game
 
@@ -43,6 +51,16 @@ module SteamHydra
         # return early if the database already exists and we don't care if its super up to date
         if check_for_valheim_thunderstore_table && require_update == false
           return
+        end
+        if recent_update
+          last_update_time = @mod_db.execute("SELECT last_update FROM modmanager_updates WHERE name='valheim'")
+          if !last_update_time.empty?
+            LOG.debug("moddb last update timestamp #{last_update_time}")
+            if (Time.now.to_i - last_update_time.flatten[0]) < 300
+              puts "Mod database was updated within the last 5 minutes, skipping update check."
+              return
+            end
+          end
         end
         # Valheim currently supports thunderstore so we will use it to manage mods
         modlist = SteamHydra::ThunderstoreAPI.get_available_modlist('valheim')
@@ -53,6 +71,8 @@ module SteamHydra
           # Insert the important stuff into the local db
           @mod_db.execute("REPLACE INTO valheim_thunderstore (name, owner, full_name, package_url, date_updated, uuid4, current_version, download_url, dependencies, rating)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [entry["name"], entry["owner"], entry["full_name"], entry["package_url"], entry["date_updated"], entry["uuid"], ver, download_url, dependencies, entry["rating_score"]])
+          
+          @mod_db.execute("REPLACE INTO modmanager_updates (name, last_update) VALUES (?, ?)", "valheim", Time.now.to_i)
         end
 
       else
@@ -93,6 +113,7 @@ module SteamHydra
       lookup = "SELECT * FROM #{modsource} WHERE full_name LIKE '%#{modname}%' ORDER BY rating DESC"
       LOG.debug("Searching local cached mod-db: #{lookup}")
       mod_results = @mod_db.execute(lookup)
+      LOG.debug("Result: #{mod_results}");
       return select_mod_from_modsource_results(mod_results, modname)
     end
 
@@ -124,6 +145,12 @@ module SteamHydra
       mod_info[:version_download_url] = "#{mod_info[:download_url]}/#{selected_version}/"
       mod_info[:target_version] = selected_version
       return mod_info
+    end
+
+    def self.check_for_table(table_name)
+      tables = @mod_db.execute("SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'")
+      LOG.debug("DB Tables: #{tables}")
+      return tables.flatten.include?(table_name)
     end
 
     # SQLite3::Database.new( "data.db" ) do |db|

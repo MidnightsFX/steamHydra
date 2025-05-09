@@ -181,7 +181,7 @@ module SteamHydra
     end
 
     def self.updates_available_from_mod_profile(modprofile_directory: SteamHydra.config[:server_dir])
-      return if !File.exist?("#{modprofile_directory}mod_profile.json")
+      return false if !File.exist?("#{modprofile_directory}mod_profile.json")
       # bail if there is no mod profile to base updates on
 
       modprofile = JSON.parse(File.read("#{modprofile_directory}mod_profile.json"), symbolize_names: true)

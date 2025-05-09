@@ -17,6 +17,10 @@ module SteamHydra
     SteamHydra::LOG.level = Logger::DEBUG
   end
 
+  def self.set_crossplay
+    SteamHydra.set_cfg_value(:crossplay, true)
+  end
+
   def self.set_verbose
     SteamHydra.set_cfg_value(:verbose, true)
   end
@@ -25,8 +29,8 @@ module SteamHydra
     SteamHydra.set_cfg_value(:validate, true)
   end
 
-  def self.set_update_mods_on_start
-    SteamHydra.set_cfg_value(:update_mods_on_start, true)
+  def self.set_update_mods_on_start(val)
+    SteamHydra.set_cfg_value(:update_mods_on_start, val)
   end
 
   def self.set_auto_restart

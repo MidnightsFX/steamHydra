@@ -50,7 +50,12 @@ module SteamHydra
     end
 
     # Checks for updates for the Game server, returns status based on the update information.
-    def self.check_for_server_updates()
+    def self.check_for_server_updates(startup = false)
+      if startup && SteamHydra.config[:update_mods_on_start] == false
+        LOG.info("Skipping first mod update check.")
+        return
+      end
+
       current_build_info = GameController.get_game_metadata(false)
       load_game_metadata_from_local_cache()
       status_details = { server_update: false, mod_updates: false }
