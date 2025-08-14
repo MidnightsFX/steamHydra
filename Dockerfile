@@ -1,4 +1,4 @@
-FROM ruby:3.2.2-bookworm
+FROM ruby:3.4.5-bookworm
 
 # These packages are for Gameserver & tooling support
  RUN apt-get update \

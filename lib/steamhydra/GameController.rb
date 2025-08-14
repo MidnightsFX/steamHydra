@@ -53,13 +53,14 @@ module SteamHydra
     def self.check_for_server_updates(startup = false)
       if startup && SteamHydra.config[:update_mods_on_start] == false
         LOG.info("Skipping first mod update check.")
-        return
+        return status_details = { server_update: false, mod_updates: false }
       end
 
       current_build_info = GameController.get_game_metadata(false)
       load_game_metadata_from_local_cache()
       status_details = { server_update: false, mod_updates: false }
-      if current_build_info['buildid'] != SteamHydra.config[:build_id] || current_build_info['timeupdated'] != SteamHydra.config[:build_datetime]
+      LOG.debug("Comparing Build ID for game update: #{current_build_info['buildid']} != #{SteamHydra.config[:build_id]}")
+      if current_build_info['buildid'] != SteamHydra.config[:build_id]
         status_details[:server_update] = true
         # Since we are performing an update we need to set the current build as what we are now running, so we don't update constantly.
         SteamHydra.set_cfg_value(:build_id, current_build_info['buildid'])

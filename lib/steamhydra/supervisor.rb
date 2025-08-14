@@ -49,7 +49,7 @@ module SteamHydra
       LOG.debug('Starting server monitoring loop')
       Supervisor.first_run(new_server_status) # this will check for server updates
       GameController.start_server_thread()
-      start_time = Time.now.to_i
+      SteamHydra.set_cfg_value(:start_time, Time.now.to_i)
       loop do
         60.times do
           sleep sleep_duration
@@ -73,27 +73,32 @@ module SteamHydra
         end
         Supervisor.runtime_maintenance()
         Supervisor.update_strategy()
-        Supervisor.nightly_restarts(start_time)
+        Supervisor.nightly_restarts()
       end
     end
 
-    def self.nightly_restarts(start_time)
-      if Time.now.to_i > start_time + 86400
+    def self.nightly_restarts()
+      if Time.now.to_i > SteamHydra.config[:start_time] + 86400
         loop do
           break if SteamQueries.check_for_active_players() == false
 
           sleep 120
         end
-        LOG.info('Server detected as empty, restarting the server.')
+        LOG.info('Server detected as empty, performing nightly restart.')
+        LOG.info("Previous start time: #{SteamHydra.config[:start_time]} setting new start time #{Time.now.to_i}")
+        SteamHydra.set_cfg_value(:start_time, Time.now.to_i)
         GameController.stop_server_thread()
         sleep 30
         GameController.start_server_thread()
-        start_time = Time.now.to_i
       end
     end
 
     def self.update_strategy()
       LOG.debug("Running update strategy check for #{SteamHydra.config[:server]}")
+      if (SteamHydra.config[:auto_update] == false)
+        LOG.debug("Updates Disabled, skipping update checks.")
+        return;
+      end
       case SteamHydra.config[:server]
       when 'Valheim'
         # Check for players and update when empty
@@ -112,6 +117,7 @@ module SteamHydra
           GameController.update_install_game(true)
         end
         ModManager.install_or_update_mods()
+        SteamHydra.set_cfg_value(:start_time, Time.now.to_i)
         GameController.start_server_thread()
       else
         LOG.warn("No Update strategy was found for: #{SteamHydra.config[:server]}. The supervisor will not automatically update this game.")

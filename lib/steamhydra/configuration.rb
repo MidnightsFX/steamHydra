@@ -37,6 +37,10 @@ module SteamHydra
     SteamHydra.set_cfg_value(:auto_restart, true)
   end
 
+  def self.set_auto_update(val)
+    SteamHydra.set_cfg_value(:auto_update, val)
+  end
+
   # For testing purposes, no logging
   def self.set_fatal
     SteamHydra::LOG.level = Logger::FATAL

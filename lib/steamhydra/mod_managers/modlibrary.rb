@@ -55,7 +55,7 @@ module SteamHydra
         if recent_update
           last_update_time = @mod_db.execute("SELECT last_update FROM modmanager_updates WHERE name='valheim'")
           if !last_update_time.empty?
-            LOG.debug("moddb last update timestamp #{last_update_time}")
+            LOG.debug("moddb last update timestamp #{last_update_time.flatten[0]}")
             if (Time.now.to_i - last_update_time.flatten[0]) < 300
               puts "Mod database was updated within the last 5 minutes, skipping update check."
               return
