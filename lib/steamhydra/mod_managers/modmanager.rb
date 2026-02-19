@@ -46,6 +46,7 @@ module SteamHydra
       mods_to_install = []
       mod_dependencies_to_install = []
       mod_dependencies = []
+      mod_being_updated_message = []
 
       targeted_mods.each do |requested_mod|
         # Mod not yet installed
@@ -119,6 +120,7 @@ module SteamHydra
         LOG.info("Dependency installs started.")
         mod_dependencies.each do |mod|
           LOG.info("Starting Mod install: #{mod[:name]}")
+          mod_being_updated_message << "#{mod[:name]}-[#{mod[:target_version]}](#{mod[:version_download_url]})\n"
           thunderstore_download_mod(mod[:version_download_url],"#{staging_directory}/#{mod[:name]}.zip")
           extract_and_move_mod(staging_directory, mod[:name], server_directory: server_directory)
           modprofile[:installed] << { name: mod[:name], version: mod[:target_version], full_name: mod[:full_name] }
@@ -131,6 +133,7 @@ module SteamHydra
           next if requested_mod[:name] != mod_to_install
 
           LOG.info("Starting Mod install: #{requested_mod[:name]}")
+          mod_being_updated_message << "#{requested_mod[:name]}-[#{requested_mod[:target_version]}](#{requested_mod[:version_download_url]})\n"
           thunderstore_download_mod(requested_mod[:version_download_url],"#{staging_directory}/#{requested_mod[:name]}.zip")
           extract_and_move_mod(staging_directory, requested_mod[:name], server_directory: server_directory)
           modprofile[:installed] << { name: requested_mod[:name], version: requested_mod[:target_version], full_name: requested_mod[:full_name] }
@@ -147,9 +150,31 @@ module SteamHydra
         end
       end
 
+      message_mod_updates(mod_being_updated_message, mods_to_remove)
       # Write out all of the mod profile changes so we know the current state of things for next time- regardless of container status
       ModManager.update_mod_profile(modprofile, modprofile_directory: server_directory)
+    end
 
+    def self.message_mod_updates(mod_being_updated_message, mods_to_remove)
+      return if mod_being_updated_message.empty? && mods_to_remove.empty?
+
+      message = ""
+      if !mod_being_updated_message.empty?
+        message += "The following mods were updated.\n"
+        mod_being_updated_message.each do |new_mod_version|
+          message += new_mod_version
+        end
+      end
+
+      if !mods_to_remove.empty?
+        message += "The following mods were removed\n"
+        mods_to_remove.each do |rm_mod|
+          message += "#{rm_mod}\n"
+        end
+      end
+
+      LOG.info("Sending updated mods message.")
+      Notifications.SendMessage(message);
     end
 
     def self.check_mod_profile(modprofile_directory: SteamHydra.config[:server_dir])

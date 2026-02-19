@@ -25,7 +25,7 @@ class CLI < Thor
     SteamHydra.set_debug if options[:debug]
     SteamHydra.set_verbose if options[:verbose]
     SteamHydra.set_validate if options[:validate]
-    SteamHydra.set_update_mods_on_start if options[:update_mods_on_start]
+    SteamHydra.set_update_mods_on_start(true) if options[:update_mods_on_start]
     SteamHydra.set_auto_restart if options[:auto_restart]
     SteamHydra.set_crossplay if options[:crossplay]
     SteamHydra.set_auto_update(options[:autoupdate])

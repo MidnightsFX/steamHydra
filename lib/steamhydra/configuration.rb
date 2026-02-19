@@ -81,6 +81,11 @@ module SteamHydra
     SteamHydra.set_cfg_value(:gem_dir, __dir__[0..-12])
     SteamHydra.set_cfg_value(:server_failures, 0)
 
+    if (ENV['DiscordHook'])
+      SteamHydra.set_cfg_value(:message_system, :discord)
+      SteamHydra.set_cfg_value(:discord, ENV['DiscordHook'])
+    end
+
     # Default user configurations
     case SteamHydra.config[:server]
     when 'Valheim'
