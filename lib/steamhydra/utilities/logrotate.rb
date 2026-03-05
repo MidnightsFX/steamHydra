@@ -4,6 +4,8 @@ module SteamHydra
   # Bepinex's default log can grow infinitely in size, this function will truncate the file to zero if it is over a certain size.
   # default size max of 2G
   def self.truncate_log(location, bytesize: 2_000_000_000, rotated_size: 2_000_000)
+    return if (!File.exist?(location))
+
     begin
     filesize = File.size(location)
     if filesize > bytesize

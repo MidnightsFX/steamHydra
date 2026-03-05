@@ -11,8 +11,10 @@ services:
       # Port: 2456
       EnableMods: 'true'
       Modloader: 'latest'
-      Mods: MidnightMods-ValhimArmory,VentureValheim-No_Vegvisir_Hints,MidnightMods-StarLevelSystem
+      # Mods: MidnightMods-ValhimArmory,VentureValheim-No_Vegvisir_Hints,MidnightMods-StarLevelSystem
+      # Mods: Therzie-Wizardry,JereKuusela-Cron_Job,JereKuusela-Upgrade_World,hyleanlegend-Rune_Magic,VitByr-VBNetTweaks,nbusseneau-Better_Cartography_Table,MidnightMods-AdjustablePortals,MidnightMods-ValhallEternal,MidnightMods-NoMapTools,MidnightMods-StarLevelSystem,Azumatt-AzuCraftyBoxes,JereKuusela-Expand_World_Size,MidnightMods-ImpactfulSkills,aruberuto-AreaRepair,warpalicious-Procedural_Roads,shudnal-LongshipUpgrades,Azumatt-PortalPreload,RandyKnapp-EpicLoot,warpalicious-Unlimited_Seeds,Crystal-DigDeeper,shudnal-ConfigurationManager,VentureValheim-Venture_Location_Reset,RustyMods-DiscordBot,southsil-SouthsilArmor,VentureValheim-Venture_Floating_Items,ComfyMods-SearsCatalog,blacks7ar-WieldEquipmentWhileSwimming,Crystal-Comfortable,shudnal-TradersExtended,MidnightMods-ValheimInfiniteFire,Korppis-SolidHitboxes,MSchmoecker-TimeoutLimit,Goldenrevolver-Quick_Stack_Store_Sort_Trash_Restock,ComfyMods-ComfyAutoRepair,VentureValheim-Venture_Logout_Tweaks,MSchmoecker-LocalizationCache,MidnightMods-ValheimArmory,MidnightMods-ValheimFortress,BentoG-MissingPieces,VentureValheim-World_Advancement_Progression,MidnightMods-Deathlink,MidnightMods-RecipeManager,Azumatt-AzuExtendedPlayerInventory,MidnightMods-Mistward,JereKuusela-Server_devcommands,Smoothbrain-SmoothSave,Azumatt-MaxPlayerCount,VentureValheim-Venture_Multiplayer_Tweaks,shudnal-MyLittleUI
       # Public: 'false'
+      #DiscordHook: 
     ports:
       - 2456:2456
       - 2456:2456/udp

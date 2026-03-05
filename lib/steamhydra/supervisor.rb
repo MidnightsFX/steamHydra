@@ -95,7 +95,7 @@ module SteamHydra
 
     def self.update_strategy()
       LOG.debug("Running update strategy check for #{SteamHydra.config[:server]}")
-      if (SteamHydra.config[:auto_update] == false)
+      if (SteamHydra.config[:mod_auto_update] == false && SteamHydra.config[:server_auto_update] == false)
         LOG.debug("Updates Disabled, skipping update checks.")
         return;
       end
@@ -113,10 +113,12 @@ module SteamHydra
         end
         LOG.info('Server detected as empty, stopping the server and performing the update.')
         GameController.stop_server_thread()
-        if update_status[:server_update]
+        if update_status[:server_update] && SteamHydra.config[:server_auto_update]
           GameController.update_install_game(true)
         end
-        ModManager.install_or_update_mods()
+        if update_status[:mod_updates] && SteamHydra.config[:mod_auto_update]
+          ModManager.install_or_update_mods()
+        end
         SteamHydra.set_cfg_value(:start_time, Time.now.to_i)
         GameController.start_server_thread()
       else
