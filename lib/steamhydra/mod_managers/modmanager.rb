@@ -74,7 +74,7 @@ module SteamHydra
           dep_data = dep.split("-")
           next if dep_data[1] == "BepInExPack_Valheim"
 
-          LOG.info("Checking for requested dependency mod: #{dep_data[0]}-#{dep_data[1]}")
+          LOG.debug("Checking for requested dependency mod: #{dep_data[0]}-#{dep_data[1]}")
           # we should consider how we want to do dependencies version enforcement here
           dep_mod_meta = ModLibrary.thunderstore_check_for_named_mod_by_author(dep_data[1], dep_data[0])
           mod_dependencies << dep_mod_meta
@@ -82,6 +82,9 @@ module SteamHydra
           currently_installed.each do |installed_mod|
             name_match = installed_mod[:name] == dep_mod_meta[:name]
             full_name_match = installed_mod[:full_name] == dep_mod_meta[:full_name]
+            # If the installed dependency does not match the latest version of the dependency, it needs an update
+            # this only applies for inferred dependencies. Since defined ones will be selected in the targed_mods update loop
+            break if (name_match || full_name_match) && installed_mod[:version] != dep_mod_meta[:version]
             mod_dependency_already_installed = true if name_match || full_name_match
           end
           next if mod_dependency_already_installed == true
@@ -213,7 +216,8 @@ module SteamHydra
       updates_available = false
       modprofile[:installed].each do |mod|
         moddb = ModLibrary.thunderstore_check_for_named_mod(mod[:full_name])
-        updates_available = true if mod[:version] != moddb[:target_version]
+        LOG.info("Checking for #{mod[:full_name]} updates: current #{mod[:version]} -> #{moddb[:target_version]} | #{mod[:version].strip != moddb[:target_version].strip}");
+        updates_available = true if "#{mod[:version].strip}" != "#{moddb[:target_version].strip}"
       end
       return updates_available
     end

@@ -10,5 +10,7 @@
 /lib/steamhydra/cache/mod_profile.json
 local-development-instance
 
+.env
+
 # rspec failure tracking
 .rspec_status

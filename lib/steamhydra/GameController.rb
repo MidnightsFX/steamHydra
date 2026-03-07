@@ -60,7 +60,7 @@ module SteamHydra
       load_game_metadata_from_local_cache()
       status_details = { server_update: false, mod_updates: false }
       LOG.debug("Comparing Build ID for game update: #{current_build_info['buildid']} != #{SteamHydra.config[:build_id]}")
-      if current_build_info['buildid'] != SteamHydra.config[:build_id]
+      if SteamHydra.config[:server_auto_update] == true && current_build_info['buildid'] != SteamHydra.config[:build_id]
         status_details[:server_update] = true
         # Since we are performing an update we need to set the current build as what we are now running, so we don't update constantly.
         SteamHydra.set_cfg_value(:build_id, current_build_info['buildid'])
@@ -68,7 +68,7 @@ module SteamHydra
         write_game_metadata_to_local_cache(current_build_info)
       end
       
-      if SteamHydra.config[:modded] == true 
+      if SteamHydra.config[:mod_auto_update] == true && SteamHydra.config[:modded] == true 
         # This updates the all available mod metadata from thunderstore
         ModLibrary.populate_game_mod_library(:valheim, true)
         status_details[:mod_updates] = ModManager.updates_available_from_mod_profile

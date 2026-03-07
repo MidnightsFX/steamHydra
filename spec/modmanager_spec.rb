@@ -26,6 +26,7 @@ RSpec.describe SteamHydra do
 
     it 'updates the local moddb', :update_moddb do
       SteamHydra.set_debug
+      SteamHydra::ModLibrary.set_internal_moddb
       SteamHydra::ModLibrary.create_modtables_if_missing
       SteamHydra::ModLibrary.populate_game_mod_library(:valheim, true, false)
     end

@@ -4,7 +4,24 @@ module SteamHydra
   # Mod manager Interface
   module ModLibrary
 
-    @mod_db = SQLite3::Database.new "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_library.db"
+    @mod_db = nil
+
+    def self.set_create_moddb_persisted_cache()
+      return if (SteamHydra.config[:modded] == false)
+
+      if (File.exist?("/server/.steamhydra_cache/mod_library.db"))
+        @mod_db = SQLite3::Database.new "/server/.steamhydra_cache/mod_library.db"
+        return;
+      end
+
+      FileManipulator.ensure_file("/server/.steamhydra_cache/")
+      FileUtils.cp("#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_library.db", "/server/.steamhydra_cache/mod_library.db")
+      @mod_db = SQLite3::Database.new "/server/.steamhydra_cache/mod_library.db"
+    end
+
+    def self.set_internal_moddb()
+      @mod_db = SQLite3::Database.new "#{SteamHydra::FileManipulator.gem_resource_location}/steamhydra/cache/mod_library.db"
+    end
 
     def self.create_modtables_if_missing()
       if check_for_table("modmanager_updates") == false
@@ -55,9 +72,9 @@ module SteamHydra
         if recent_update
           last_update_time = @mod_db.execute("SELECT last_update FROM modmanager_updates WHERE name='valheim'")
           if !last_update_time.empty?
-            LOG.debug("moddb last update timestamp #{last_update_time.flatten[0]}")
+            LOG.info("moddb last update timestamp #{last_update_time.flatten[0]} current time: #{Time.now.to_i} = #{(Time.now.to_i - last_update_time.flatten[0])}")
             if (Time.now.to_i - last_update_time.flatten[0]) < 300
-              puts "Mod database was updated within the last 5 minutes, skipping update check."
+              LOG.info(puts "Mod database was updated within the last 5 minutes, skipping update check.")
               return
             end
           end

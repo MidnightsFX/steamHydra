@@ -11,6 +11,7 @@ module SteamHydra
         new_server_status = FileManipulator.install_server()
         if SteamHydra.config[:modded]
           LOG.info('Mods enabled!')
+          ModLibrary.set_create_moddb_persisted_cache()
           FileManipulator.install_modtools()
         end
         # Generate Game configurations
@@ -131,8 +132,8 @@ module SteamHydra
       case SteamHydra.config[:server]
       when 'Valheim'
         if SteamHydra.config[:modded] == true
-        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}BepInEx/LogOutput.log", bytesize: 1, rotated_size: 0)
-        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}logs/valheim.log", bytesize: 1, rotated_size: 0)
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}BepInEx/LogOutput.log", rotated_size: 0)
+        SteamHydra.truncate_log("#{SteamHydra.config[:server_dir]}logs/valheim.log", rotated_size: 0)
         end
       else
         LOG.debug("No maintenance strategy defined for #{SteamHydra.config[:server]}. Logs and other system resouces might overflow.")
